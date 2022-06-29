@@ -3,8 +3,9 @@ from datetime import datetime
 
 import plaid
 from plaid.api import plaid_api
-from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
+from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
+from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
 
 try:
     from plaid_keys import get_keys
@@ -70,6 +71,20 @@ class PlaidManager:
 
         return transactions
 
+    def get_balances(
+        self, access_token: t.Optional[list[str]] = None
+    ) -> list[dict[str, t.Any]]:
+        if not access_token:
+            access_token = self.access_token
+
+        accounts = []
+        for token in access_token:
+            # Pull real-time balance information for each account associated with the Item
+            request = AccountsBalanceGetRequest(access_token=token)
+            response = self.client.accounts_balance_get(request)
+            accounts.extend(response["accounts"])
+        return accounts
+
 
 if __name__ == "__main__":
     # Available environments are
@@ -79,4 +94,8 @@ if __name__ == "__main__":
     env = plaid.Environment.Sandbox
     app = PlaidManager(env)
     transactions = app.get_transactions()
-    print(transactions)
+    # print(transactions)
+    accounts = app.get_balances()
+    # print(accounts)
+    for account in accounts:
+        print(f"""{account["name"]}: {account["balances"]["current"]}""")
