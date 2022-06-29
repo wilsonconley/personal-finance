@@ -7,10 +7,12 @@ from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
 
+from smartsheet_manager import SmartsheetManager
+
 try:
-    from plaid_keys import get_keys
+    from api_keys import get_plaid
 except ModuleNotFoundError:
-    print("rename sample_plaid_keys.py to plaid_keys.py and insert your API keys")
+    print("rename sample_api_keys.py to api_keys.py and insert your API keys")
 
 
 class PlaidManager:
@@ -21,7 +23,7 @@ class PlaidManager:
     client: plaid_api.PlaidApi
 
     def __init__(self, env: str) -> None:
-        client_id, secret, access_token = get_keys(env)
+        client_id, secret, access_token = get_plaid(env)
         configuration = plaid.Configuration(
             host=env,
             api_key={
@@ -97,5 +99,14 @@ if __name__ == "__main__":
     # print(transactions)
     accounts = app.get_balances()
     # print(accounts)
+    names = []
+    balances = []
     for account in accounts:
+        names.append(account["name"])
+        balances.append(account["balances"]["current"])
         print(f"""{account["name"]}: {account["balances"]["current"]}""")
+
+    smart = SmartsheetManager()
+    sheet_id = smart.get_sheet_id("Balances")
+    data = {"Name": names, "Balance": balances}
+    smart.add_rows(sheet_id, data)

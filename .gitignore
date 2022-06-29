@@ -1,4 +1,4 @@
 .DS_Store
 finance.egg-info/
-app/plaid_keys.py
+app/api_keys.py
 app/__pycache__
