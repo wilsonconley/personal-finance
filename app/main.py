@@ -98,18 +98,21 @@ if __name__ == "__main__":
     # 'Sandbox'
     env = plaid.Environment.Sandbox
     app = PlaidManager(env)
-    transactions = app.get_transactions()
-    # print(transactions)
-    accounts = app.get_balances()
-    # print(accounts)
-    names = []
-    balances = []
-    for account in accounts:
-        names.append(account["name"])
-        balances.append(account["balances"]["current"])
-        print(f"""{account["name"]}: {account["balances"]["current"]}""")
-
     smart = SmartsheetManager()
+
+    # Transactions
+    transactions = app.get_transactions()
+    data = {key: [i[key] for i in transactions] for key in transactions[0].to_dict()}
+
+    sheet_id = smart.get_sheet_id("Transactions")
+    smart.add_rows(sheet_id, data, "transaction_id")
+
+    # Balances
+    accounts = app.get_balances()
+    new_accounts = [account.to_dict() for account in accounts]
+    for account in new_accounts:
+        account["balances"] = account["balances"]["available"]
+    data = {key: [i[key] for i in new_accounts] for key in new_accounts[0]}
+
     sheet_id = smart.get_sheet_id("Balances")
-    data = {"Name": names, "Balance": balances}
-    smart.add_rows(sheet_id, data)
+    smart.add_rows(sheet_id, data, "account_id")
