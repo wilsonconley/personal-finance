@@ -7,13 +7,7 @@ from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
 
-try:
-    from api_keys import get_plaid
-except ModuleNotFoundError as exc:
-    print(
-        "\nERROR: rename sample_api_keys.py to api_keys.py and insert your API keys!!\n"
-    )
-    raise exc
+from app.api_keys import get_plaid
 
 
 class PlaidManager:

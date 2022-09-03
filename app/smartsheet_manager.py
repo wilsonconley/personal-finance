@@ -9,13 +9,7 @@ import smartsheet.models
 from plaid.model.location import Location
 from plaid.model.payment_meta import PaymentMeta
 
-try:
-    from api_keys import get_smartsheet
-except ModuleNotFoundError as exc:
-    print(
-        "\nERROR: rename sample_api_keys.py to api_keys.py and insert your API keys!!\n"
-    )
-    raise exc
+from app.api_keys import get_smartsheet
 
 os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_smartsheet()
 
