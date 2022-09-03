@@ -37,13 +37,8 @@ def startup():
     # smart = SmartsheetManager()
 
     # Create bokeh plots
-    plotters.pie_chart_bokeh(plaid_app.balances)
-
-    # # Create matplotlib plots
-    # plotters.pie_chart_matplotlib(plaid_app.balances)
-
-    # # Create balances table
-    # plotters.table_bokeh(plaid_app.balances)
+    plotters.pie_chart_balances(plaid_app.balances)
+    plotters.pie_chart_transactions(plaid_app.transactions, plaid_app.categories)
 
 
 @APP.get("/refresh/")
@@ -64,7 +59,6 @@ def get_transactions():
 
 
 if __name__ == "__main__":
-    # startup()
     uvicorn.run(
         "main:APP",
         reload=True,

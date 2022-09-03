@@ -78,6 +78,9 @@ class PlaidManager:
                 access_token=token,
                 start_date=datetime.strptime("2020-01-01", "%Y-%m-%d").date(),
                 end_date=datetime.strptime("2021-01-01", "%Y-%m-%d").date(),
+                options=TransactionsGetRequestOptions(
+                    include_personal_finance_category=True
+                ),
             )
             response = self.client.transactions_get(request)
             transactions.extend(response["transactions"])
@@ -107,6 +110,9 @@ class PlaidManager:
         self.transactions["datestr"] = [
             x.strftime("%Y-%m-%d") for x in self.transactions["date"]
         ]
+        self.transactions["personal_finance_category_primary"] = [
+            x["primary"] for x in self.transactions["personal_finance_category"]
+        ]
 
         return self.transactions
 
@@ -127,4 +133,8 @@ class PlaidManager:
             account["balances"] = account["balances"]["available"]
         data = {key: [i[key] for i in accounts_] for key in accounts_[0]}
         self.balances = pd.DataFrame(data)
+
+        # Additional formatting
+        self.balances["balances_str"] = [f"${x:.2f}" for x in self.balances["balances"]]
+
         return self.balances
