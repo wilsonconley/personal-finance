@@ -119,7 +119,7 @@
   ];
 
   const transactions_cols = [
-    { key: "datetime", title: "Datetime", value: (v) => v.datetime },
+    { key: "datestr", title: "Date", value: (v) => v.datestr },
     { key: "amount", title: "Amount", value: (v) => v.amount },
     { key: "name", title: "Name", value: (v) => v.name },
     { key: "merchant_name", title: "Merchant", value: (v) => v.merchant_name },

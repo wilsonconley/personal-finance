@@ -102,6 +102,12 @@ class PlaidManager:
             key: [i[key] for i in transactions] for key in transactions[0].to_dict()
         }
         self.transactions = pd.DataFrame(data)
+
+        # Additional formatting
+        self.transactions["datestr"] = [
+            x.strftime("%Y-%m-%d") for x in self.transactions["date"]
+        ]
+
         return self.transactions
 
     def get_balances(self, access_token: t.Optional[list[str]] = None) -> pd.DataFrame:
