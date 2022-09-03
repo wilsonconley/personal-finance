@@ -1,11 +1,10 @@
+import json
 import os
 import typing as t
 from datetime import date
 
-import json
 import smartsheet
 import smartsheet.models
-
 from plaid.model.location import Location
 from plaid.model.payment_meta import PaymentMeta
 

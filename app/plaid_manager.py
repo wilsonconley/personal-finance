@@ -1,14 +1,16 @@
 import typing as t
 from datetime import datetime
 
+import pandas as pd
 import plaid
 from plaid.api import plaid_api
 from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
-from plaid.model.transactions_get_request_options import TransactionsGetRequestOptions
+from plaid.model.transactions_get_request_options import (
+    TransactionsGetRequestOptions,
+)
 
 from app.api_keys import get_plaid
-
 
 class PlaidManager:
     client_id: str
@@ -16,6 +18,9 @@ class PlaidManager:
     access_token: list[str]
     api_client: plaid.ApiClient
     client: plaid_api.PlaidApi
+
+    balances: pd.DataFrame
+    transactions: pd.DataFrame
 
     def __init__(self, env: str) -> None:
         client_id, secret, access_token = get_plaid(env)
@@ -37,7 +42,7 @@ class PlaidManager:
 
     def get_transactions(
         self, access_token: t.Optional[list[str]] = None
-    ) -> list[dict[str, t.Any]]:
+    ) -> pd.DataFrame:
         if not access_token:
             access_token = self.access_token
 
@@ -66,11 +71,14 @@ class PlaidManager:
                 response = self.client.transactions_get(request)
                 transactions.extend(response["transactions"])
 
-        return transactions
+        # Parse data into DataFrame
+        data = {
+            key: [i[key] for i in transactions] for key in transactions[0].to_dict()
+        }
+        self.transactions = pd.DataFrame(data)
+        return self.transactions
 
-    def get_balances(
-        self, access_token: t.Optional[list[str]] = None
-    ) -> list[dict[str, t.Any]]:
+    def get_balances(self, access_token: t.Optional[list[str]] = None) -> pd.DataFrame:
         if not access_token:
             access_token = self.access_token
 
@@ -80,4 +88,11 @@ class PlaidManager:
             request = AccountsBalanceGetRequest(access_token=token)
             response = self.client.accounts_balance_get(request)
             accounts.extend(response["accounts"])
-        return accounts
+
+        # Parse data into DataFrame
+        accounts_ = [account.to_dict() for account in accounts]
+        for account in accounts_:
+            account["balances"] = account["balances"]["available"]
+        data = {key: [i[key] for i in accounts_] for key in accounts_[0]}
+        self.balances = pd.DataFrame(data)
+        return self.balances
