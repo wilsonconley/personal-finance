@@ -12,15 +12,38 @@ from plaid.model.transactions_get_request_options import (
 
 from app.api_keys import get_plaid
 
+
 class PlaidManager:
+    # API
     client_id: str
     secret: str
     access_token: list[str]
     api_client: plaid.ApiClient
     client: plaid_api.PlaidApi
 
+    # Data
     balances: pd.DataFrame
     transactions: pd.DataFrame
+
+    # Helpers
+    categories: list[str] = [
+        "INCOME",
+        "TRANSFER_IN",
+        "TRANSFER_OUT",
+        "LOAN_PAYMENTS",
+        "BANK_FEES",
+        "ENTERTAINMENT",
+        "FOOD_AND_DRINK",
+        "GENERAL_MERCHANDISE",
+        "HOME_IMPROVEMENT",
+        "MEDICAL",
+        "PERSONAL_CARE",
+        "GENERAL_SERVICES",
+        "GOVERNMENT_AND_NON_PROFIT",
+        "TRANSPORTATION",
+        "TRAVEL",
+        "RENT_AND_UTILITIES",
+    ]
 
     def __init__(self, env: str) -> None:
         client_id, secret, access_token = get_plaid(env)
@@ -39,6 +62,9 @@ class PlaidManager:
         self.access_token = access_token
         self.api_client = api_client
         self.client = client
+
+        self.get_balances()
+        self.get_transactions()
 
     def get_transactions(
         self, access_token: t.Optional[list[str]] = None

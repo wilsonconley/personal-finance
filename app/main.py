@@ -35,9 +35,6 @@ def startup():
     plaid_app = PlaidManager(env)
     # smart = SmartsheetManager()
 
-    plaid_app.get_balances()
-    plaid_app.get_transactions()
-
     # Create bokeh plots
     pie_chart_bokeh(plaid_app.balances)
 
@@ -47,19 +44,22 @@ def startup():
     # # Create balances table
     # table_bokeh(plaid_app.balances)
 
-    print("startup complete")
+
+@APP.get("/refresh/")
+def refresh():
+    plaid_app.get_balances()
+    plaid_app.get_transactions()
+    return "success"
 
 
 @APP.get("/balances/")
 def get_balances():
-    balances = plaid_app.get_balances()
-    return balances.to_json(orient="records")
+    return plaid_app.balances.to_json(orient="records")
 
 
 @APP.get("/transactions/")
 def get_transactions():
-    transactions = plaid_app.get_transactions()
-    return transactions.to_json(orient="records")
+    return plaid_app.transactions.to_json(orient="records")
 
 
 if __name__ == "__main__":
