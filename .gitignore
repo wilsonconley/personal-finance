@@ -1,5 +1,5 @@
 .DS_Store
 finance.egg-info/
-app/api_keys/keystore.py
+finance/api_keys/keystore.py
 __pycache__
 .vscode

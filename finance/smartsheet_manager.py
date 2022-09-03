@@ -8,7 +8,7 @@ import smartsheet.models
 from plaid.model.location import Location
 from plaid.model.payment_meta import PaymentMeta
 
-from app.api_keys import get_smartsheet
+from finance.api_keys import get_smartsheet
 
 os.environ["SMARTSHEET_ACCESS_TOKEN"] = get_smartsheet()
 

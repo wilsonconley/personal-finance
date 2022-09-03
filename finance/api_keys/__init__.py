@@ -4,7 +4,7 @@ __all__ = [
 ]
 
 try:
-    from app.api_keys.keystore import get_plaid, get_smartsheet
+    from finance.api_keys.keystore import get_plaid, get_smartsheet
 except ModuleNotFoundError as exc:
     print(
         "\nERROR: rename sample_keystore.py to keystore.py and insert your API keys!!\n"

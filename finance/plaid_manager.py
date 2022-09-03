@@ -10,7 +10,7 @@ from plaid.model.transactions_get_request_options import (
     TransactionsGetRequestOptions,
 )
 
-from app.api_keys import get_plaid
+from finance.api_keys import get_plaid
 
 
 class PlaidManager:

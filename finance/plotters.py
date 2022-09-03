@@ -11,8 +11,8 @@ from bokeh.plotting import figure, output_file, save, show
 from bokeh.transform import cumsum
 
 
-def pie_chart_bokeh(data):
-    p_data = pd.DataFrame(data)
+def pie_chart_bokeh(data: pd.DataFrame):
+    p_data = data
     p_data["angle"] = p_data["balances"] / p_data["balances"].sum() * 2 * np.pi
     num_account = len(p_data["balances"])
     if num_account < min(Category20c.keys()):
@@ -85,9 +85,9 @@ def pie_chart_bokeh(data):
     )
 
 
-def pie_chart_matplotlib(data):
+def pie_chart_matplotlib(data: pd.DataFrame):
     # Get plot data
-    p_data = pd.DataFrame(data)
+    p_data = data
     balances = p_data["balances"]
     names = p_data["name"]
     num_account = len(balances)
@@ -139,8 +139,8 @@ def pie_chart_matplotlib(data):
     )
 
 
-def table_bokeh(data):
-    df = pd.DataFrame(data)
+def table_bokeh(data: pd.DataFrame):
+    df = data
     source = ColumnDataSource(df)
 
     columns = [
@@ -154,4 +154,81 @@ def table_bokeh(data):
     export_svg(
         myTable,
         filename=Path(__file__).parent / "../frontend/src/assets/balances_table.svg",
+    )
+
+
+def pie_chart_bokeh_transactions(df: pd.DataFrame, categories: list[str]):
+    # Organize by category
+    for category in categories:
+        pass
+
+    df["angle"] = df["balances"] / df["balances"].sum() * 2 * np.pi
+    num_account = len(df["balances"])
+    if num_account < min(Category20c.keys()):
+        df["color"] = Category20c[min(Category20c.keys())][0:num_account]
+    elif num_account > max(Category20c.keys()):
+        df["color"] = (
+            Category20c[max(Category20c.keys())]
+            * int(np.ceil(num_account / max(Category20c.keys())))
+        )[0:num_account]
+    else:
+        df["color"] = Category20c[num_account]
+    df["labels"] = [f"${x:.2f}" for x in df["balances"]]
+    df["legend"] = [
+        f"{name} ({id[0:4]})" for id, name in zip(df["account_id"], df["name"])
+    ]
+
+    p = figure(
+        height=350,
+        # title="Account Balances Overview",
+        toolbar_location=None,
+        tools="hover",
+        tooltips="@name: @labels",
+        x_range=(-0.5, 1.0),
+    )
+
+    p.wedge(
+        x=0,
+        y=0,
+        radius=0.4,
+        start_angle=cumsum("angle", include_zero=True),
+        end_angle=cumsum("angle"),
+        line_color="white",
+        fill_color="color",
+        legend_field="legend",
+        source=df,
+    )
+
+    value = df["balances"].values
+    df["cum_angle"] = [
+        (sum(value[0 : i + 1]) - (item / 2)) / sum(value) * 2.0 * np.pi
+        for i, item in enumerate(value)
+    ]
+    df["cos"] = np.cos(df["cum_angle"]) * 0.25
+    df["sin"] = np.sin(df["cum_angle"]) * 0.5
+    source = ColumnDataSource(df)
+    labels = LabelSet(
+        x="cos",
+        y="sin",
+        text="labels",
+        source=source,
+        text_font_size="10pt",
+        text_color="black",
+        text_align="center",
+    )
+    p.add_layout(labels)
+
+    p.axis.axis_label = None
+    p.axis.visible = False
+    p.grid.grid_line_color = None
+
+    p.output_backend = "svg"
+    p.background_fill_color = None
+    p.border_fill_color = None
+
+    # show(p)
+    output_file(Path(__file__).parent / "../frontend/src/assets/transactions.html")
+    # save(p, title="Balances Overview")
+    export_svg(
+        p, filename=Path(__file__).parent / "../frontend/src/assets/transactions.svg"
     )

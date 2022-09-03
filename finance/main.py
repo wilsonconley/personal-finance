@@ -1,12 +1,13 @@
 import json
 
 import plaid
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.plaid_manager import PlaidManager
-from app.smartsheet_manager import SmartsheetManager
-from app.plotters import pie_chart_bokeh, pie_chart_matplotlib, table_bokeh
+import finance.plotters as plotters
+from finance.plaid_manager import PlaidManager
+from finance.smartsheet_manager import SmartsheetManager
 
 APP = FastAPI()
 
@@ -36,13 +37,13 @@ def startup():
     # smart = SmartsheetManager()
 
     # Create bokeh plots
-    pie_chart_bokeh(plaid_app.balances)
+    plotters.pie_chart_bokeh(plaid_app.balances)
 
     # # Create matplotlib plots
-    # pie_chart_matplotlib(plaid_app.balances)
+    # plotters.pie_chart_matplotlib(plaid_app.balances)
 
     # # Create balances table
-    # table_bokeh(plaid_app.balances)
+    # plotters.table_bokeh(plaid_app.balances)
 
 
 @APP.get("/refresh/")
@@ -63,4 +64,8 @@ def get_transactions():
 
 
 if __name__ == "__main__":
-    startup()
+    # startup()
+    uvicorn.run(
+        "main:APP",
+        reload=True,
+    )
