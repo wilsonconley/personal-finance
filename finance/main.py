@@ -1,9 +1,15 @@
 import json
+import typing as t
 
 import plaid
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from plaid.api import plaid_api
+from plaid.model.country_code import CountryCode
+from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+from plaid.model.products import Products
+from pydantic import BaseModel
 
 import finance.plotters as plotters
 from finance.plaid_manager import PlaidManager
@@ -36,15 +42,16 @@ def startup():
     plaid_app = PlaidManager(env)
     # smart = SmartsheetManager()
 
+
+@APP.get("/refresh_data/")
+def refresh():
+    # Update balances and transactions
+    plaid_app.get_balances()
+    plaid_app.get_transactions()
+
     # Create bokeh plots
     plotters.pie_chart_balances(plaid_app.balances)
     plotters.pie_chart_transactions(plaid_app.transactions, plaid_app.categories)
-
-
-@APP.get("/refresh/")
-def refresh():
-    plaid_app.get_balances()
-    plaid_app.get_transactions()
     return "success"
 
 
@@ -56,6 +63,54 @@ def get_balances():
 @APP.get("/transactions/")
 def get_transactions():
     return plaid_app.transactions.to_json(orient="records")
+
+
+@APP.get("/check_existing_tokens/")
+def check_existing_tokens():
+    return json.dumps(plaid_app.check_existing_tokens())
+
+
+class Item(BaseModel):
+    token: str
+
+
+@APP.post("/create_link_token/")
+def create_link_token(item: t.Optional[Item] = None):
+    # Create a link_token for the given user
+    if item is not None:
+        request = plaid_api.LinkTokenCreateRequest(
+            client_name="Personal Finance App",
+            country_codes=[CountryCode("US")],
+            # redirect_uri="https://domainname.com/oauth-page.html",
+            language="en",
+            # webhook="https://webhook.example.com",
+            user=LinkTokenCreateRequestUser(client_user_id="wilsonconley"),
+            access_token=item.token,
+        )
+    else:
+        request = plaid_api.LinkTokenCreateRequest(
+            products=[Products("auth")],
+            client_name="Personal Finance App",
+            country_codes=[CountryCode("US")],
+            # redirect_uri="https://domainname.com/oauth-page.html",
+            language="en",
+            # webhook="https://webhook.example.com",
+            user=LinkTokenCreateRequestUser(client_user_id="wilsonconley"),
+        )
+    response = plaid_app.client.link_token_create(request)
+    print(response)
+    response_ = response.to_dict()
+    return json.dumps(response_["link_token"])
+
+
+@APP.post("/exchange_public_token/")
+def exchange_public_token(item: Item):
+    request = plaid_api.ItemPublicTokenExchangeRequest(public_token=item.token)
+    response = plaid_app.client.item_public_token_exchange(request)
+    access_token = response["access_token"]
+    print("retrieved access token: " + access_token)
+    plaid_app.add_token(access_token)
+    return json.dumps(response.to_dict())
 
 
 if __name__ == "__main__":

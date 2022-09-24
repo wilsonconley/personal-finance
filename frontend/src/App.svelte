@@ -1,10 +1,12 @@
 <script>
+  // @ts-nocheck
+
   import balances_overview from "./assets/balances.svg";
   import transactions_out from "./assets/transactions_out.svg";
   import transactions_in from "./assets/transactions_in.svg";
   import Counter from "./lib/Counter.svelte";
   import { onMount } from "svelte";
-  import { balances, transactions } from "./store.js";
+  import { balances, transactions, link_token } from "./store.js";
   import SvelteTable from "svelte-table";
 
   const rows = [
@@ -133,34 +135,113 @@
     },
   ];
 
-  onMount(async () => {
+  async function get_link_token() {
+    const response = await fetch("http://127.0.0.1:8000/create_link_token/", {
+      method: "POST",
+    });
+    link_token.set(JSON.parse(await response.json()));
+  }
+
+  async function link_account_btn() {
+    await get_link_token();
+    var handler = Plaid.create({
+      token: $link_token,
+      onSuccess: async function (public_token, metadata) {
+        await fetch("http://127.0.0.1:8000/exchange_public_token/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token: public_token }),
+        });
+        await refresh_and_update();
+      },
+      onExit: function (err, metadata) {
+        if (err != null) {
+          console.log(err);
+          console.log(metadata);
+        }
+      },
+    });
+    handler.open();
+  }
+
+  async function get_balances() {
+    const response = await fetch("http://127.0.0.1:8000/balances/");
+    balances.set(JSON.parse(await response.json()));
+  }
+
+  async function get_transactions() {
+    const response = await fetch("http://127.0.0.1:8000/transactions/");
+    transactions.set(JSON.parse(await response.json()));
+  }
+
+  async function check_existing_tokens() {
+    const response = await fetch(
+      "http://127.0.0.1:8000/check_existing_tokens/"
+    );
+    const bad_tokens = JSON.parse(await response.json());
+    bad_tokens.forEach(async (token) => {
+      const response = await fetch("http://127.0.0.1:8000/create_link_token/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token: token }),
+      });
+      const access_link_token = JSON.parse(await response.json());
+      var handler = Plaid.create({
+        token: access_link_token,
+        onSuccess: function (public_token, metadata) {
+          fetch("http://127.0.0.1:8000/exchange_public_token/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ token: public_token }),
+          });
+        },
+        onExit: function (err, metadata) {
+          if (err != null) {
+            console.log(err);
+            console.log(metadata);
+          }
+        },
+      });
+      handler.open();
+    });
+  }
+
+  async function refresh_and_update() {
+    // refresh data
+    await fetch("http://127.0.0.1:8000/refresh_data/");
+
     // get balances
-    fetch("http://127.0.0.1:8000/balances/")
-      .then((response) => response.json())
-      .then((data) => {
-        balances.set(JSON.parse(data));
-        console.log($balances);
-      })
-      .catch((error) => {
-        console.log(error);
-        return [];
-      });
+    await get_balances();
+
     // get transactions
-    fetch("http://127.0.0.1:8000/transactions/")
-      .then((response) => response.json())
-      .then((data) => {
-        transactions.set(JSON.parse(data));
-        console.log($transactions);
-      })
-      .catch((error) => {
-        console.log(error);
-        return [];
-      });
+    await get_transactions();
+  }
+
+  onMount(async () => {
+    // check existing accounts
+    await check_existing_tokens();
+
+    // refresh and update data
+    await refresh_and_update();
   });
 </script>
 
+<svelte:head>
+  <script
+    src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+</svelte:head>
+
 <main>
   <!-- <div class="horizontal"> -->
+
+  <button id="link-button" on:click={link_account_btn}> Link Account </button>
+
   <div>
     <h1>Account Balances Overview</h1>
     <img

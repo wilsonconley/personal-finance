@@ -1,9 +1,14 @@
+import json
+import os
+from time import sleep
 import typing as t
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import plaid
 from plaid.api import plaid_api
+from plaid.exceptions import ApiException
 from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
 from plaid.model.transactions_get_request_options import (
@@ -17,9 +22,10 @@ class PlaidManager:
     # API
     client_id: str
     secret: str
-    access_token: list[str]
+    access_tokens: list[str]
     api_client: plaid.ApiClient
     client: plaid_api.PlaidApi
+    env: str
 
     # Data
     balances: pd.DataFrame
@@ -46,7 +52,7 @@ class PlaidManager:
     ]
 
     def __init__(self, env: str) -> None:
-        client_id, secret, access_token = get_plaid(env)
+        client_id, secret, access_tokens = get_plaid(env)
         configuration = plaid.Configuration(
             host=env,
             api_key={
@@ -59,21 +65,52 @@ class PlaidManager:
 
         self.client_id = client_id
         self.secret = secret
-        self.access_token = access_token
+        self.access_tokens = access_tokens
         self.api_client = api_client
         self.client = client
+        self.env = env
 
-        self.get_balances()
-        self.get_transactions()
+        # self.get_balances()
+        # self.get_transactions()
+
+    def check_existing_tokens(self) -> list[str]:
+        bad_tokens = []
+        for token in self.access_tokens:
+            request = AccountsBalanceGetRequest(access_token=token)
+            try:
+                self.client.accounts_balance_get(request)
+            except ApiException:
+                bad_tokens.append(token)
+        return bad_tokens
+
+    def add_token(self, access_token: str) -> None:
+        self.access_tokens.append(access_token)
+        token_df = pd.DataFrame({"token": self.access_tokens, "env": self.env})
+        if os.path.exists(Path(__file__).parent / "api_keys/.access_tokens.csv"):
+            existing_df = pd.read_csv(
+                Path(__file__).parent / "api_keys/.access_tokens.csv"
+            )
+            print("before")
+            print(token_df)
+            print(existing_df)
+            token_df.merge(existing_df)
+            token_df = pd.concat(
+                [token_df, existing_df], ignore_index=True
+            ).drop_duplicates()
+            print("after")
+            print(token_df)
+        token_df.to_csv(
+            Path(__file__).parent / "api_keys/.access_tokens.csv", index=False
+        )
 
     def get_transactions(
-        self, access_token: t.Optional[list[str]] = None
+        self, access_tokens: t.Optional[list[str]] = None
     ) -> pd.DataFrame:
-        if not access_token:
-            access_token = self.access_token
+        if not access_tokens:
+            access_tokens = self.access_tokens
 
         transactions = []
-        for token in access_token:
+        for token in access_tokens:
             request = TransactionsGetRequest(
                 access_token=token,
                 start_date=datetime.strptime("2020-01-01", "%Y-%m-%d").date(),
@@ -82,7 +119,21 @@ class PlaidManager:
                     include_personal_finance_category=True
                 ),
             )
-            response = self.client.transactions_get(request)
+            retries = 3
+            response = None
+            for _ in range(0, retries):
+                try:
+                    response = self.client.transactions_get(request)
+                except ApiException as exc:
+                    print(f"ERROR LOADING TRANSACTIONS FOR {token}")
+                    http_response = json.loads(exc.body)
+                    if http_response["error_code"] == "PRODUCT_NOT_READY":
+                        print("retrying...")
+                        sleep(5)
+            if response is None:
+                print(f"failed to load transasctions for {token}")
+                continue
+
             transactions.extend(response["transactions"])
 
             # the transactions in the response are paginated, so make multiple calls while increasing the offset to
@@ -116,12 +167,12 @@ class PlaidManager:
 
         return self.transactions
 
-    def get_balances(self, access_token: t.Optional[list[str]] = None) -> pd.DataFrame:
-        if not access_token:
-            access_token = self.access_token
+    def get_balances(self, access_tokens: t.Optional[list[str]] = None) -> pd.DataFrame:
+        if not access_tokens:
+            access_tokens = self.access_tokens
 
         accounts = []
-        for token in access_token:
+        for token in access_tokens:
             # Pull real-time balance information for each account associated with the Item
             request = AccountsBalanceGetRequest(access_token=token)
             response = self.client.accounts_balance_get(request)

@@ -1,5 +1,6 @@
 .DS_Store
 finance.egg-info/
 finance/api_keys/keystore.py
+finance/api_keys/.access_tokens.csv
 __pycache__
 .vscode
