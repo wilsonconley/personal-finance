@@ -7,6 +7,7 @@ If it's going to be an object, default this to an empty object.
 export const balances = writable([]);
 export const transactions = writable([]);
 export const link_token = writable([]);
+export const is_page_loaded = writable(false);
 
 // /** Data transformation.
 // For our use case, we only care about the drink names, not the other information.

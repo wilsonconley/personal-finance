@@ -98,7 +98,6 @@ def create_link_token(item: t.Optional[Item] = None):
             user=LinkTokenCreateRequestUser(client_user_id="wilsonconley"),
         )
     response = plaid_app.client.link_token_create(request)
-    print(response)
     response_ = response.to_dict()
     return json.dumps(response_["link_token"])
 

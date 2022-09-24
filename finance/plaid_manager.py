@@ -70,9 +70,6 @@ class PlaidManager:
         self.client = client
         self.env = env
 
-        # self.get_balances()
-        # self.get_transactions()
-
     def check_existing_tokens(self) -> list[str]:
         bad_tokens = []
         for token in self.access_tokens:
@@ -90,15 +87,10 @@ class PlaidManager:
             existing_df = pd.read_csv(
                 Path(__file__).parent / "api_keys/.access_tokens.csv"
             )
-            print("before")
-            print(token_df)
-            print(existing_df)
             token_df.merge(existing_df)
             token_df = pd.concat(
                 [token_df, existing_df], ignore_index=True
             ).drop_duplicates()
-            print("after")
-            print(token_df)
         token_df.to_csv(
             Path(__file__).parent / "api_keys/.access_tokens.csv", index=False
         )
