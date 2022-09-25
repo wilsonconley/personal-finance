@@ -10,36 +10,37 @@
     is_page_loaded,
     is_bokeh_initialized,
     is_plaid_link_initialized,
+    filter_month,
+    filter_year,
   } from "./store.js";
   import SvelteTable from "svelte-table";
 
-  function get_unique_values(rows, field) {
-    // get all unique values
-    let unique_values = {};
-    rows.forEach((row) => {
-      let this_value = row[field];
-      if (unique_values[this_value] === undefined)
-        unique_values[this_value] = {
-          name: `${this_value}`,
-          value: this_value,
-        };
-    });
-    // fix order
-    unique_values = Object.entries(unique_values)
-      .sort()
-      .reduce((o, [k, v]) => ((o[k] = v), o), {});
-    return Object.values(unique_values);
-  }
-
-  const balances_cols = [
-    { key: "name", title: "Name", value: (v) => v.name, sortable: true },
-    {
-      key: "balances",
-      title: "Balance",
-      value: (v) => v.balances_str,
-      sortable: true,
-    },
+  let months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
+  let filter_month_str;
+  let savestore = false;
+  let years = ["2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"];
+  let filter_year_str;
+
+  $: if (savestore) {
+    window.sessionStorage.setItem(
+      "filter_month",
+      JSON.stringify($filter_month)
+    );
+    window.sessionStorage.setItem("filter_year", JSON.stringify($filter_year));
+  }
 
   const transactions_cols = [
     {
@@ -47,18 +48,12 @@
       title: "Date",
       value: (v) => v.datestr,
       sortable: true,
-      filterOptions: (rows) => {
-        return get_unique_values(rows, "datestr");
-      },
     },
     {
       key: "amount",
       title: "Amount",
       value: (v) => v.amount,
       sortable: true,
-      filterOptions: (rows) => {
-        return get_unique_values(rows, "amount");
-      },
     },
     {
       key: "name",
@@ -97,6 +92,24 @@
       },
     },
   ];
+
+  function get_unique_values(rows, field) {
+    // get all unique values
+    let unique_values = {};
+    rows.forEach((row) => {
+      let this_value = row[field];
+      if (unique_values[this_value] === undefined)
+        unique_values[this_value] = {
+          name: `${this_value}`,
+          value: this_value,
+        };
+    });
+    // fix order
+    unique_values = Object.entries(unique_values)
+      .sort()
+      .reduce((o, [k, v]) => ((o[k] = v), o), {});
+    return Object.values(unique_values);
+  }
 
   async function get_link_token() {
     const response = await fetch("http://127.0.0.1:8000/create_link_token/", {
@@ -206,8 +219,58 @@
     Bokeh.embed.embed_item(item, "table_balances");
   }
 
+  function initialize_bokeh() {
+    is_bokeh_initialized.set(true);
+  }
+
+  function initialize_plaid_link() {
+    is_plaid_link_initialized.set(true);
+  }
+
+  async function update_monthly_transactions() {
+    const index = months.findIndex((element) => {
+      if (element === filter_month_str) {
+        return true;
+      }
+      return false;
+    });
+    filter_month.set(index);
+  }
+
   onMount(async () => {
     is_page_loaded.set(false);
+
+    // load stores
+    let ses = window.sessionStorage.getItem("filter_month");
+    if (ses) {
+      $filter_month = JSON.parse(ses);
+    }
+    ses = window.sessionStorage.getItem("filter_year");
+    if (ses) {
+      $filter_year = JSON.parse(ses);
+    }
+    savestore = true;
+
+    // set filters
+    const today = new Date();
+    if ($filter_month < 0) {
+      filter_month.set(today.getMonth());
+    }
+    filter_month_str = months[$filter_month];
+    if ($filter_year < 0) {
+      const index = years.findIndex((element) => {
+        console.log(element);
+        console.log(String(today.getFullYear()));
+        if (element === String(today.getFullYear())) {
+          return true;
+        }
+        return false;
+      });
+      filter_year.set(index);
+    }
+    filter_year_str = years[$filter_year];
+    console.log(filter_year);
+    console.log(filter_year_str);
 
     // check existing accounts
     await check_existing_tokens();
@@ -220,14 +283,6 @@
 
     is_page_loaded.set(true);
   });
-
-  function initialize_bokeh() {
-    is_bokeh_initialized.set(true);
-  }
-
-  function initialize_plaid_link() {
-    is_plaid_link_initialized.set(true);
-  }
 </script>
 
 <svelte:head>
@@ -281,6 +336,30 @@
 
   <div>
     <h1>Transactions Overview</h1>
+    <h2>Yearly</h2>
+    <h2>Monthly</h2>
+    <div class="arrange-horizontally">
+      <select
+        bind:value={filter_month_str}
+        on:change={update_monthly_transactions}
+      >
+        {#each months as month}
+          <option value={month}>
+            {month}
+          </option>
+        {/each}
+      </select>
+      <select
+        bind:value={filter_year_str}
+        on:change={update_monthly_transactions}
+      >
+        {#each years as year}
+          <option value={year}>
+            {year}
+          </option>
+        {/each}
+      </select>
+    </div>
     <div class="arrange-horizontally">
       <div>
         <h3>Transactions Out</h3>
