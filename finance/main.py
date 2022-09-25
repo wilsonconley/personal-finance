@@ -3,6 +3,7 @@ import typing as t
 
 import plaid
 import uvicorn
+from bokeh.embed import json_item
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from plaid.api import plaid_api
@@ -49,10 +50,30 @@ def refresh():
     plaid_app.get_balances()
     plaid_app.get_transactions()
 
-    # Create bokeh plots
-    plotters.pie_chart_balances(plaid_app.balances)
-    plotters.pie_chart_transactions(plaid_app.transactions, plaid_app.categories)
+    # # Create bokeh plots
+    # plotters.pie_chart_balances(plaid_app.balances)
+    # plotters.pie_chart_transactions(plaid_app.transactions, plaid_app.categories)
     return "success"
+
+
+@APP.get("/plot_balances/")
+def plot_balances():
+    p = plotters.pie_chart_balances(plaid_app.balances)
+    return json.dumps(json_item(p))
+
+
+@APP.get("/plot_transactions_in/")
+def plot_transactions_in():
+    p = plotters.pie_chart_transactions_in(plaid_app.transactions, plaid_app.categories)
+    return json.dumps(json_item(p))
+
+
+@APP.get("/plot_transactions_out/")
+def plot_transactions_out():
+    p = plotters.pie_chart_transactions_out(
+        plaid_app.transactions, plaid_app.categories
+    )
+    return json.dumps(json_item(p))
 
 
 @APP.get("/balances/")

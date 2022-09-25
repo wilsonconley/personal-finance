@@ -1,9 +1,6 @@
 <script>
   // @ts-nocheck
 
-  import balances_overview from "./assets/balances.svg";
-  import transactions_out from "./assets/transactions_out.svg";
-  import transactions_in from "./assets/transactions_in.svg";
   import Counter from "./lib/Counter.svelte";
   import { onMount } from "svelte";
   import {
@@ -297,6 +294,20 @@
     await get_transactions();
   }
 
+  async function make_plots() {
+    var response = await fetch("http://127.0.0.1:8000/plot_balances/");
+    var item = JSON.parse(await response.json());
+    Bokeh.embed.embed_item(item, "plot_balances");
+
+    response = await fetch("http://127.0.0.1:8000/plot_transactions_in/");
+    item = JSON.parse(await response.json());
+    Bokeh.embed.embed_item(item, "plot_transactions_in");
+
+    response = await fetch("http://127.0.0.1:8000/plot_transactions_out/");
+    item = JSON.parse(await response.json());
+    Bokeh.embed.embed_item(item, "plot_transactions_out");
+  }
+
   onMount(async () => {
     is_page_loaded.set(false);
 
@@ -306,13 +317,28 @@
     // refresh and update data
     await refresh_and_update();
 
+    // make plots
+    await make_plots();
+
     is_page_loaded.set(true);
   });
 </script>
 
 <svelte:head>
-  <script
-    src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+  <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js">
+  </script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.3.min.js">
+  </script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.3.min.js">
+  </script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.3.min.js">
+  </script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.4.3.min.js">
+  </script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.3.min.js">
+  </script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.3.min.js">
+  </script>
 </svelte:head>
 
 <main>
@@ -320,17 +346,11 @@
     <div class="loader">Loading...</div>
   {/if}
 
-  <!-- <div class="horizontal"> -->
-
   <button id="link-button" on:click={link_account_btn}> Link Account </button>
 
   <div>
     <h1>Account Balances Overview</h1>
-    <img
-      src={balances_overview}
-      class="balances_overview"
-      alt="Balances Overview"
-    />
+    <div id="plot_balances" class="balances_overview" />
     <SvelteTable columns={balances_cols} rows={$balances} />
   </div>
 
@@ -339,19 +359,11 @@
     <div class="arrange-horizontally">
       <div>
         <h3>Transactions Out</h3>
-        <img
-          src={transactions_out}
-          class="transactions_out"
-          alt="Transactions Out"
-        />
+        <div id="plot_transactions_out" class="transactions_out" />
       </div>
       <div>
         <h3>Transactions In</h3>
-        <img
-          src={transactions_in}
-          class="transactions_in"
-          alt="Transactions In"
-        />
+        <div id="plot_transactions_in" class="transactions_in" />
       </div>
     </div>
     <SvelteTable columns={transactions_cols} rows={$transactions} />
@@ -366,16 +378,22 @@
 
 <style>
   .balances_overview {
-    height: 30em;
-    will-change: filter;
+    width: 700px;
+    height: auto;
+    margin: 0 auto;
+    position: relative;
   }
   .transactions_out {
-    height: 20em;
-    will-change: filter;
+    width: 350px;
+    height: auto;
+    margin: 0 auto;
+    position: relative;
   }
   .transactions_in {
-    height: 20em;
-    will-change: filter;
+    width: 350px;
+    height: auto;
+    margin: 0 auto;
+    position: relative;
   }
   .arrange-horizontally > * {
     display: inline-block;

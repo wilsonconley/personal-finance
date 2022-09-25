@@ -7,19 +7,30 @@ import pandas as pd
 from bokeh.io import export_svg
 from bokeh.models import ColumnDataSource, DataTable, LabelSet, TableColumn
 from bokeh.palettes import Category20c
-from bokeh.plotting import figure, output_file, save, show
+from bokeh.plotting import figure, output_file, save, show, Figure
 from bokeh.transform import cumsum
 
 
-def pie_chart_balances(balances_df: pd.DataFrame):
+def pie_chart_balances(balances_df: pd.DataFrame) -> Figure:
     balances_df["legend"] = [
         f"{name} ({id[0:4]})"
         for id, name in zip(balances_df["account_id"], balances_df["name"])
     ]
-    bokeh_pie_chart_svg(balances_df, "balances", "legend", "balances_str", "balances")
+    p = bokeh_pie_chart(
+        balances_df,
+        "balances",
+        "legend",
+        "balances_str",
+        "balances",
+        height=400,
+        width=700,
+    )
+    return p
 
 
-def pie_chart_transactions(transaction_df: pd.DataFrame, categories: list[str]):
+def pie_chart_transactions_out(
+    transaction_df: pd.DataFrame, categories: list[str]
+) -> Figure:
     # Transactions Out
     transaction_dict = {"category": [], "total": []}
     for category in categories:
@@ -34,9 +45,16 @@ def pie_chart_transactions(transaction_df: pd.DataFrame, categories: list[str]):
             transaction_dict["total"].append(total)
     df = pd.DataFrame(transaction_dict)
     df["labels"] = [f"${x:.2f}" for x in df["total"]]
-    bokeh_pie_chart_svg(df, "total", "category", "labels", "transactions_out")
+    p = bokeh_pie_chart(
+        df, "total", "category", "labels", "transactions_out", height=250, width=350
+    )
+    return p
 
-    # Transactions Out
+
+def pie_chart_transactions_in(
+    transaction_df: pd.DataFrame, categories: list[str]
+) -> Figure:
+    # Transactions In
     transaction_dict = {"category": [], "total": []}
     for category in categories:
         selector = [
@@ -50,12 +68,21 @@ def pie_chart_transactions(transaction_df: pd.DataFrame, categories: list[str]):
             transaction_dict["total"].append(total * -1)
     df = pd.DataFrame(transaction_dict)
     df["labels"] = [f"${x:.2f}" for x in df["total"]]
-    bokeh_pie_chart_svg(df, "total", "category", "labels", "transactions_in")
+    p = bokeh_pie_chart(
+        df, "total", "category", "labels", "transactions_in", height=250, width=350
+    )
+    return p
 
 
-def bokeh_pie_chart_svg(
-    df: pd.DataFrame, angle_col: str, legend_col: str, label_col: str, filename: str
-):
+def bokeh_pie_chart(
+    df: pd.DataFrame,
+    angle_col: str,
+    legend_col: str,
+    label_col: str,
+    filename: str,
+    height: int,
+    width: int,
+) -> Figure:
     # Calculate angles of each data set
     df["angle"] = df[angle_col] / df[angle_col].sum() * 2 * np.pi
     count = len(df[angle_col])
@@ -71,11 +98,12 @@ def bokeh_pie_chart_svg(
 
     # Create plot
     p = figure(
-        height=350,
+        height=height,
+        width=width,
         # title="Account Balances Overview",
         toolbar_location=None,
         tools="hover",
-        # tooltips="@category: @labels",
+        tooltips=f"@{legend_col}: @{label_col}",
         x_range=(-0.5, 1.0),
     )
     p.wedge(
@@ -113,11 +141,14 @@ def bokeh_pie_chart_svg(
     p.axis.visible = False
     p.grid.grid_line_color = None
 
-    # Save svg
-    p.output_backend = "svg"
+    # Set background
     p.background_fill_color = None
     p.border_fill_color = None
-    output_file(Path(__file__).parent / f"../frontend/src/assets/{filename}.html")
-    export_svg(
-        p, filename=Path(__file__).parent / f"../frontend/src/assets/{filename}.svg"
-    )
+
+    # # Save svg
+    # p.output_backend = "svg"
+    # output_file(Path(__file__).parent / f"../frontend/src/assets/{filename}.html")
+    # export_svg(
+    #     p, filename=Path(__file__).parent / f"../frontend/src/assets/{filename}.svg"
+    # )
+    return p
