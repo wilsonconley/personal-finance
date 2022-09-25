@@ -11,11 +11,32 @@ from bokeh.plotting import figure, output_file, save, show, Figure
 from bokeh.transform import cumsum
 
 
-def pie_chart_balances(balances_df: pd.DataFrame) -> Figure:
-    balances_df["legend"] = [
-        f"{name} ({id[0:4]})"
-        for id, name in zip(balances_df["account_id"], balances_df["name"])
+def table_balances(balances_df: pd.DataFrame) -> Figure:
+    columns = [
+        TableColumn(field="legend", title="Name"),
+        TableColumn(field="balances", title="Balance"),
     ]
+    p = bokeh_data_table(
+        balances_df,
+        columns,
+        height=280,
+        width=400,
+    )
+    return p
+
+
+def bokeh_data_table(
+    df: pd.DataFrame,
+    columns: list[TableColumn],
+    height: int,
+    width: int,
+) -> Figure:
+    source = ColumnDataSource(df)
+    p = DataTable(source=source, columns=columns, width=width, height=height)
+    return p
+
+
+def pie_chart_balances(balances_df: pd.DataFrame) -> Figure:
     p = bokeh_pie_chart(
         balances_df,
         "balances",

@@ -8,6 +8,8 @@ export const balances = writable([]);
 export const transactions = writable([]);
 export const link_token = writable([]);
 export const is_page_loaded = writable(false);
+export const is_bokeh_initialized = writable(false);
+export const is_plaid_link_initialized = writable(false);
 
 // /** Data transformation.
 // For our use case, we only care about the drink names, not the other information.

@@ -56,6 +56,12 @@ def refresh():
     return "success"
 
 
+@APP.get("/table_balances/")
+def table_balances():
+    p = plotters.table_balances(plaid_app.balances)
+    return json.dumps(json_item(p))
+
+
 @APP.get("/plot_balances/")
 def plot_balances():
     p = plotters.pie_chart_balances(plaid_app.balances)
