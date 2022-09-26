@@ -87,8 +87,14 @@ def get_balances():
     return plaid_app.balances.to_json(orient="records")
 
 
-@APP.get("/transactions/")
-def get_transactions():
+class TransactionsParam(BaseModel):
+    month: str
+    year: str
+
+
+@APP.post("/transactions/")
+def get_transactions(param: TransactionsParam):
+    plaid_app.filter_transactions(param.month, param.year)
     return plaid_app.transactions.to_json(orient="records")
 
 

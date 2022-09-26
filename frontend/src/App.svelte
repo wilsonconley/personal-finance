@@ -150,7 +150,16 @@
   }
 
   async function get_transactions() {
-    const response = await fetch("http://127.0.0.1:8000/transactions/");
+    const response = await fetch("http://127.0.0.1:8000/transactions/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        month: String($filter_month + 1),
+        year: filter_year_str,
+      }),
+    });
     transactions.set(JSON.parse(await response.json()));
   }
 
@@ -201,22 +210,23 @@
     await get_transactions();
   }
 
-  async function make_plots() {
-    var response = await fetch("http://127.0.0.1:8000/plot_balances/");
-    var item = JSON.parse(await response.json());
-    Bokeh.embed.embed_item(item, "plot_balances");
+  async function update_plot(id, clear_old = true) {
+    if (clear_old) {
+      const my_node = document.getElementById(id);
+      if (my_node != undefined) {
+        my_node.innerHTML = "";
+      }
+    }
+    const response = await fetch(`http://127.0.0.1:8000/${id}/`);
+    const item = JSON.parse(await response.json());
+    Bokeh.embed.embed_item(item, id);
+  }
 
-    response = await fetch("http://127.0.0.1:8000/plot_transactions_in/");
-    item = JSON.parse(await response.json());
-    Bokeh.embed.embed_item(item, "plot_transactions_in");
-
-    response = await fetch("http://127.0.0.1:8000/plot_transactions_out/");
-    item = JSON.parse(await response.json());
-    Bokeh.embed.embed_item(item, "plot_transactions_out");
-
-    response = await fetch("http://127.0.0.1:8000/table_balances/");
-    item = JSON.parse(await response.json());
-    Bokeh.embed.embed_item(item, "table_balances");
+  async function make_plots_and_tables() {
+    await update_plot("plot_balances");
+    await update_plot("plot_transactions_in");
+    await update_plot("plot_transactions_out");
+    await update_plot("table_balances", false);
   }
 
   function initialize_bokeh() {
@@ -228,13 +238,29 @@
   }
 
   async function update_monthly_transactions() {
-    const index = months.findIndex((element) => {
+    // update month and year
+    var index = months.findIndex((element) => {
       if (element === filter_month_str) {
         return true;
       }
       return false;
     });
     filter_month.set(index);
+
+    index = years.findIndex((element) => {
+      if (element === filter_year_str) {
+        return true;
+      }
+      return false;
+    });
+    filter_year.set(index);
+
+    // update transactions
+    await get_transactions();
+    // is_page_loaded.set(false);
+    await update_plot("plot_transactions_in");
+    await update_plot("plot_transactions_out");
+    // is_page_loaded.set(true);
   }
 
   onMount(async () => {
@@ -259,8 +285,6 @@
     filter_month_str = months[$filter_month];
     if ($filter_year < 0) {
       const index = years.findIndex((element) => {
-        console.log(element);
-        console.log(String(today.getFullYear()));
         if (element === String(today.getFullYear())) {
           return true;
         }
@@ -269,8 +293,6 @@
       filter_year.set(index);
     }
     filter_year_str = years[$filter_year];
-    console.log(filter_year);
-    console.log(filter_year_str);
 
     // check existing accounts
     await check_existing_tokens();
@@ -278,8 +300,8 @@
     // refresh and update data
     await refresh_and_update();
 
-    // make plots
-    await make_plots();
+    // make all plots and tables
+    await make_plots_and_tables();
 
     is_page_loaded.set(true);
   });

@@ -30,6 +30,7 @@ class PlaidManager:
     # Data
     balances: pd.DataFrame
     transactions: pd.DataFrame
+    transactions_all: pd.DataFrame
 
     # Helpers
     categories: list[str] = [
@@ -105,8 +106,8 @@ class PlaidManager:
         for token in access_tokens:
             request = TransactionsGetRequest(
                 access_token=token,
-                start_date=datetime.strptime("2020-01-01", "%Y-%m-%d").date(),
-                end_date=datetime.strptime("2021-01-01", "%Y-%m-%d").date(),
+                start_date=datetime.strptime("2015-01-01", "%Y-%m-%d").date(),
+                end_date=datetime.now().date(),
                 options=TransactionsGetRequestOptions(
                     include_personal_finance_category=True
                 ),
@@ -131,13 +132,15 @@ class PlaidManager:
             # the transactions in the response are paginated, so make multiple calls while increasing the offset to
             # retrieve all transactions
             while len(transactions) < response["total_transactions"]:
-                options = TransactionsGetRequestOptions()
+                options = TransactionsGetRequestOptions(
+                    include_personal_finance_category=True
+                )
                 options.offset = len(transactions)
 
                 request = TransactionsGetRequest(
                     access_token=token,
-                    start_date=datetime.strptime("2020-01-01", "%Y-%m-%d").date(),
-                    end_date=datetime.strptime("2021-01-01", "%Y-%m-%d").date(),
+                    start_date=datetime.strptime("2015-01-01", "%Y-%m-%d").date(),
+                    end_date=datetime.now().date(),
                     options=options,
                 )
                 response = self.client.transactions_get(request)
@@ -147,17 +150,25 @@ class PlaidManager:
         data = {
             key: [i[key] for i in transactions] for key in transactions[0].to_dict()
         }
-        self.transactions = pd.DataFrame(data)
+        self.transactions_all = pd.DataFrame(data)
 
         # Additional formatting
-        self.transactions["datestr"] = [
-            x.strftime("%Y-%m-%d") for x in self.transactions["date"]
+        self.transactions_all["datestr"] = [
+            x.strftime("%Y-%m-%d") for x in self.transactions_all["date"]
         ]
-        self.transactions["personal_finance_category_primary"] = [
-            x["primary"] for x in self.transactions["personal_finance_category"]
+        self.transactions_all["personal_finance_category_primary"] = [
+            _get_primary_category(x)
+            for x in self.transactions_all["personal_finance_category"]
         ]
 
-        return self.transactions
+        return self.transactions_all
+
+    def filter_transactions(self, month: str, year: str) -> None:
+        selector = [
+            str(x)[0:4] == year and int(str(x)[5:7]) == int(month)
+            for x in self.transactions_all["date"]
+        ]
+        self.transactions = self.transactions_all[selector]
 
     def get_balances(self, access_tokens: t.Optional[list[str]] = None) -> pd.DataFrame:
         if not access_tokens:
@@ -185,3 +196,10 @@ class PlaidManager:
         ]
 
         return self.balances
+
+
+def _get_primary_category(category: dict[str, str]) -> str:
+    if category is not None and "primary" in category:
+        return category["primary"]
+    else:
+        return "N/A"
