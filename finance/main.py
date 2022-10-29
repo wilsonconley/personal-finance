@@ -94,8 +94,14 @@ class TransactionsParam(BaseModel):
 
 @APP.post("/transactions/")
 def get_transactions(param: TransactionsParam):
-    plaid_app.filter_transactions(param.month, param.year)
+    plaid_app.filter_transactions_by_month(param.month, param.year)
     return plaid_app.transactions.to_json(orient="records")
+
+
+@APP.post("/yearly_transactions/")
+def yearly_transactions(param: TransactionsParam):
+    plaid_app.filter_transactions_by_year(param.year)
+    return plaid_app.yearly_transactions.to_json(orient="records")
 
 
 @APP.get("/check_existing_tokens/")

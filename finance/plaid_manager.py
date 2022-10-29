@@ -31,6 +31,7 @@ class PlaidManager:
     balances: pd.DataFrame
     transactions: pd.DataFrame
     transactions_all: pd.DataFrame
+    yearly_transactions: pd.DataFrame
 
     # Helpers
     categories: list[str] = [
@@ -163,12 +164,16 @@ class PlaidManager:
 
         return self.transactions_all
 
-    def filter_transactions(self, month: str, year: str) -> None:
+    def filter_transactions_by_month(self, month: str, year: str) -> None:
         selector = [
             str(x)[0:4] == year and int(str(x)[5:7]) == int(month)
             for x in self.transactions_all["date"]
         ]
         self.transactions = self.transactions_all[selector]
+
+    def filter_transactions_by_year(self, year: str) -> None:
+        selector = [str(x)[0:4] == year for x in self.transactions_all["date"]]
+        self.yearly_transactions = self.transactions_all[selector]
 
     def get_balances(self, access_tokens: t.Optional[list[str]] = None) -> pd.DataFrame:
         if not access_tokens:

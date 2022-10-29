@@ -12,6 +12,7 @@
     is_plaid_link_initialized,
     filter_month,
     filter_year,
+    filter_yearly_transactions,
   } from "./store.js";
   import SvelteTable from "svelte-table";
 
@@ -32,14 +33,20 @@
   let filter_month_str;
   let savestore = false;
   let years = ["2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"];
-  let filter_year_str;
 
   $: if (savestore) {
+    sessionStorage.removeItem("filter_month");
+    sessionStorage.removeItem("filter_year");
+    sessionStorage.removeItem("filter_yearly_transactions");
     window.sessionStorage.setItem(
       "filter_month",
       JSON.stringify($filter_month)
     );
     window.sessionStorage.setItem("filter_year", JSON.stringify($filter_year));
+    window.sessionStorage.setItem(
+      "filter_yearly_transactions",
+      JSON.stringify($filter_yearly_transactions)
+    );
   }
 
   const transactions_cols = [
@@ -157,7 +164,7 @@
       },
       body: JSON.stringify({
         month: String($filter_month + 1),
-        year: filter_year_str,
+        year: String($filter_year),
       }),
     });
     transactions.set(JSON.parse(await response.json()));
@@ -247,20 +254,26 @@
     });
     filter_month.set(index);
 
-    index = years.findIndex((element) => {
-      if (element === filter_year_str) {
-        return true;
-      }
-      return false;
-    });
-    filter_year.set(index);
-
     // update transactions
     await get_transactions();
     // is_page_loaded.set(false);
     await update_plot("plot_transactions_in");
     await update_plot("plot_transactions_out");
     // is_page_loaded.set(true);
+  }
+
+  async function update_yearly_transactions() {
+    const response = await fetch("http://127.0.0.1:8000/yearly_transactions/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        month: "",
+        year: String($filter_yearly_transactions),
+      }),
+    });
+    yearly_transactions.set(JSON.parse(await response.json()));
   }
 
   onMount(async () => {
@@ -275,6 +288,10 @@
     if (ses) {
       $filter_year = JSON.parse(ses);
     }
+    ses = window.sessionStorage.getItem("filter_yearly_transactions");
+    if (ses) {
+      $filter_yearly_transactions = JSON.parse(ses);
+    }
     savestore = true;
 
     // set filters
@@ -283,16 +300,12 @@
       filter_month.set(today.getMonth());
     }
     filter_month_str = months[$filter_month];
-    if ($filter_year < 0) {
-      const index = years.findIndex((element) => {
-        if (element === String(today.getFullYear())) {
-          return true;
-        }
-        return false;
-      });
-      filter_year.set(index);
+    if ($filter_yearly_transactions < 0) {
+      filter_year.set(String(today.getFullYear()));
     }
-    filter_year_str = years[$filter_year];
+    if ($filter_yearly_transactions < 0) {
+      filter_yearly_transactions.set(String(today.getFullYear()));
+    }
 
     // check existing accounts
     await check_existing_tokens();
@@ -358,7 +371,17 @@
 
   <div>
     <h1>Transactions Overview</h1>
-    <h2>Yearly</h2>
+    <!-- <h2>Yearly</h2>
+    <select
+      bind:value={$filter_yearly_transactions}
+      on:change={update_yearly_transactions}
+    >
+      {#each years as year}
+        <option value={year}>
+          {year}
+        </option>
+      {/each}
+    </select> -->
     <h2>Monthly</h2>
     <div class="arrange-horizontally">
       <select
@@ -371,10 +394,7 @@
           </option>
         {/each}
       </select>
-      <select
-        bind:value={filter_year_str}
-        on:change={update_monthly_transactions}
-      >
+      <select bind:value={$filter_year} on:change={update_monthly_transactions}>
         {#each years as year}
           <option value={year}>
             {year}

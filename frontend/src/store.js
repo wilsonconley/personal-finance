@@ -12,6 +12,8 @@ export const is_bokeh_initialized = writable(false);
 export const is_plaid_link_initialized = writable(false);
 export const filter_month = writable(-1);
 export const filter_year = writable(-1);
+export const filter_yearly_transactions = writable(-1);
+export const yearly_transactions = writable([]);
 
 // /** Data transformation.
 // For our use case, we only care about the drink names, not the other information.
