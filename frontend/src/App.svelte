@@ -33,11 +33,13 @@
   let filter_month_str;
   let savestore = false;
   let years = ["2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"];
+  let tokens_checked = false;
 
   $: if (savestore) {
     sessionStorage.removeItem("filter_month");
     sessionStorage.removeItem("filter_year");
     sessionStorage.removeItem("filter_yearly_transactions");
+    sessionStorage.removeItem("tokens_checked");
     window.sessionStorage.setItem(
       "filter_month",
       JSON.stringify($filter_month)
@@ -46,6 +48,10 @@
     window.sessionStorage.setItem(
       "filter_yearly_transactions",
       JSON.stringify($filter_yearly_transactions)
+    );
+    window.sessionStorage.setItem(
+      "tokens_checked",
+      JSON.stringify(tokens_checked)
     );
   }
 
@@ -204,6 +210,7 @@
       });
       handler.open();
     });
+    tokens_checked = true;
   }
 
   async function refresh_and_update() {
@@ -292,6 +299,10 @@
     if (ses) {
       $filter_yearly_transactions = JSON.parse(ses);
     }
+    ses = window.sessionStorage.getItem("tokens_checked");
+    if (ses) {
+      tokens_checked = JSON.parse(ses);
+    }
     savestore = true;
 
     // set filters
@@ -308,7 +319,9 @@
     }
 
     // check existing accounts
-    await check_existing_tokens();
+    if (!tokens_checked) {
+      await check_existing_tokens();
+    }
 
     // refresh and update data
     await refresh_and_update();
