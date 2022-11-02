@@ -13,6 +13,7 @@ from plaid.model.products import Products
 from pydantic import BaseModel
 
 import finance.plotters as plotters
+from finance.budget import Budget
 from finance.plaid_manager import PlaidManager
 from finance.smartsheet_manager import SmartsheetManager
 
@@ -20,6 +21,7 @@ APP = FastAPI()
 
 
 plaid_app: PlaidManager
+budget: Budget
 
 
 @APP.on_event("startup")
@@ -43,6 +45,10 @@ def startup():
     plaid_app = PlaidManager(env)
     # smart = SmartsheetManager()
 
+    # Load budget
+    global budget
+    budget = Budget()
+
 
 @APP.get("/refresh_data/")
 def refresh():
@@ -53,6 +59,22 @@ def refresh():
     # # Create bokeh plots
     # plotters.pie_chart_balances(plaid_app.balances)
     # plotters.pie_chart_transactions(plaid_app.transactions, plaid_app.categories)
+    return "success"
+
+
+class BudgetParam(BaseModel):
+    budget: dict[str, float]
+
+
+@APP.get("/budget/")
+def get_budget():
+    return json.dumps(budget.budget)
+
+
+@APP.post("/budget/")
+def set_budget(param: BudgetParam):
+    budget.budget = param.budget
+    budget.save_budget()
     return "success"
 
 

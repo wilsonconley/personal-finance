@@ -13,6 +13,7 @@
     filter_month,
     filter_year,
     filter_yearly_transactions,
+    budget,
   } from "./store.js";
   import SvelteTable from "svelte-table";
 
@@ -34,6 +35,7 @@
   let savestore = false;
   let years = ["2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"];
   let tokens_checked = false;
+  let total_budget = 0.0;
 
   $: if (savestore) {
     sessionStorage.removeItem("filter_month");
@@ -224,6 +226,22 @@
     await get_transactions();
   }
 
+  async function get_budget() {
+    // get budget
+    const response = await fetch("http://127.0.0.1:8000/budget/");
+    budget.set(JSON.parse(await response.json()));
+    await update_budget();
+  }
+
+  async function update_budget() {
+    total_budget = 0;
+    for (const [category, value] of Object.entries($budget)) {
+      if (category != "INCOME") {
+        total_budget += parseFloat(value);
+      }
+    }
+  }
+
   async function update_plot(id, clear_old = true) {
     if (clear_old) {
       const my_node = document.getElementById(id);
@@ -283,6 +301,20 @@
     yearly_transactions.set(JSON.parse(await response.json()));
   }
 
+  async function set_budget() {
+    // call API to store budget in backend
+    await fetch("http://127.0.0.1:8000/budget/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        budget: $budget,
+      }),
+    });
+    await update_budget();
+  }
+
   onMount(async () => {
     is_page_loaded.set(false);
 
@@ -325,6 +357,9 @@
 
     // refresh and update data
     await refresh_and_update();
+
+    // get budget
+    await get_budget();
 
     // make all plots and tables
     await make_plots_and_tables();
@@ -380,6 +415,33 @@
     <h1>Account Balances Overview</h1>
     <div id="plot_balances" class="balances_overview" />
     <div id="table_balances" class="balances_table" />
+  </div>
+
+  <h1>Budget (Monthly)</h1>
+  <div class="arrange-horizontally">
+    <div class="budget-summary">
+      <p>Income is <span style="color:green">${$budget["INCOME"]}</span></p>
+      <p>Budget is <span style="color:red">${total_budget}</span></p>
+      <p>
+        Savings is <span style="color:yellow"
+          >${$budget["INCOME"] - total_budget}</span
+        >
+      </p>
+    </div>
+    <div class="budget">
+      {#each Object.entries($budget) as [category, value]}
+        <div>
+          <label for="budget_{category}">{category}:</label>
+          <input
+            bind:value={$budget[category]}
+            on:change={set_budget}
+            id="budget_{category}"
+            name="budget_{category}"
+            placeholder={value}
+          />
+        </div>
+      {/each}
+    </div>
   </div>
 
   <div>
@@ -463,6 +525,19 @@
   .arrange-horizontally > * {
     display: inline-block;
     text-align: center;
+  }
+  .budget-summary {
+    width: 200px;
+    height: auto;
+    margin: 0 auto;
+    position: relative;
+  }
+  .budget {
+    text-align: right;
+    width: 500px;
+    height: auto;
+    margin: 0 auto;
+    position: relative;
   }
   .loader {
     position: fixed;

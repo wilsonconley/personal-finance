@@ -4,3 +4,4 @@ finance/api_keys/keystore.py
 finance/api_keys/.access_tokens.csv
 __pycache__
 .vscode
+finance/.budget.csv
