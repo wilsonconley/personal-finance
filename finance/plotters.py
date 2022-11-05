@@ -122,40 +122,6 @@ def bar_graph_budget(transaction_df: pd.DataFrame, budget: dict[str, float]) -> 
     p.y_range.start = 0
     p.add_layout(p.legend[0], "right")
 
-    # # Alternate chart
-    # x = [
-    #     (category, value)
-    #     for category in data["categories"]
-    #     for value in ["budget", "transactions"]
-    # ]
-    # counts = sum(zip(data["budget"], data["transactions"]), ())  # like an hstack
-    # source = ColumnDataSource(data=dict(x=x, counts=counts))
-    # p = figure(
-    #     x_range=FactorRange(*x),
-    #     height=height,
-    #     width=width,
-    #     title="Budget Transactions",
-    #     toolbar_location=None,
-    #     tools="hover",
-    #     tooltips=f"$@counts",
-    # )
-    # p.vbar(
-    #     x="x",
-    #     top="counts",
-    #     width=0.9,
-    #     source=source,
-    #     color=factor_cmap(
-    #         "x",
-    #         palette=("#2171b5", "#FFDA00"),
-    #         factors=["budget", "transactions"],
-    #         start=1,
-    #     ),
-    # )
-    # p.y_range.start = 0
-    # p.x_range.range_padding = 0.1
-    # p.xaxis.major_label_orientation = 1
-    # p.xgrid.grid_line_color = None
-
     return p
 
 

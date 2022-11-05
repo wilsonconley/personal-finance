@@ -496,10 +496,6 @@
     </div>
     <SvelteTable columns={transactions_cols} rows={$transactions} />
   </div>
-
-  <div class="card">
-    <Counter />
-  </div>
 </main>
 
 <style>
