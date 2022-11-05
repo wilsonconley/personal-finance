@@ -36,6 +36,7 @@
   let years = ["2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"];
   let tokens_checked = false;
   let total_budget = 0.0;
+  let net_worth = 0.0;
 
   $: if (savestore) {
     sessionStorage.removeItem("filter_month");
@@ -164,6 +165,11 @@
     balances.set(JSON.parse(await response.json()));
   }
 
+  async function get_net_worth() {
+    const response = await fetch("http://127.0.0.1:8000/net_worth/");
+    net_worth = JSON.parse(await response.json());
+  }
+
   async function get_transactions() {
     const response = await fetch("http://127.0.0.1:8000/transactions/", {
       method: "POST",
@@ -221,6 +227,9 @@
 
     // get balances
     await get_balances();
+
+    // get net worth
+    await get_net_worth();
 
     // get transactions
     await get_transactions();
@@ -416,6 +425,7 @@
 
   <div>
     <h1>Account Balances Overview</h1>
+    <h3>Net Worth: <span style="color:green">${net_worth}</span></h3>
     <div id="plot_balances" class="balances_overview" />
     <div id="table_balances" class="balances_table" />
   </div>

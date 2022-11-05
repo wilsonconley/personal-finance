@@ -29,6 +29,7 @@ class PlaidManager:
 
     # Data
     balances: pd.DataFrame
+    net_worth: float
     transactions: pd.DataFrame
     transactions_all: pd.DataFrame
     yearly_transactions: pd.DataFrame
@@ -199,6 +200,9 @@ class PlaidManager:
             f"{name} ({id[0:4]})"
             for id, name in zip(self.balances["account_id"], self.balances["name"])
         ]
+
+        # Calculate net worth
+        self.net_worth = sum(self.balances["balances"])
 
         return self.balances
 

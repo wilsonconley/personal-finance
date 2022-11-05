@@ -115,6 +115,11 @@ def get_balances():
     return plaid_app.balances.to_json(orient="records")
 
 
+@APP.get("/net_worth/")
+def get_net_worth():
+    return plaid_app.net_worth
+
+
 class TransactionsParam(BaseModel):
     month: str
     year: str
