@@ -90,6 +90,12 @@ def plot_balances():
     return json.dumps(json_item(p))
 
 
+@APP.get("/plot_budget/")
+def plot_budget():
+    p = plotters.bar_graph_budget(plaid_app.transactions, budget.budget)
+    return json.dumps(json_item(p))
+
+
 @APP.get("/plot_transactions_in/")
 def plot_transactions_in():
     p = plotters.pie_chart_transactions_in(plaid_app.transactions, plaid_app.categories)

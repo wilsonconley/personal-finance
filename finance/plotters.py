@@ -1,3 +1,4 @@
+import copy
 import typing as t
 from pathlib import Path
 
@@ -5,10 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from bokeh.io import export_svg
-from bokeh.models import ColumnDataSource, DataTable, LabelSet, TableColumn
+from bokeh.models import ColumnDataSource, DataTable, LabelSet, TableColumn, FactorRange
 from bokeh.palettes import Category20c
 from bokeh.plotting import figure, output_file, save, show, Figure
-from bokeh.transform import cumsum
+from bokeh.transform import cumsum, factor_cmap, dodge
 
 
 def table_balances(balances_df: pd.DataFrame) -> Figure:
@@ -46,6 +47,115 @@ def pie_chart_balances(balances_df: pd.DataFrame) -> Figure:
         height=400,
         width=700,
     )
+    return p
+
+
+def bar_graph_budget(transaction_df: pd.DataFrame, budget: dict[str, float]) -> Figure:
+    # Set params
+    height = 400
+    width = 700
+
+    # Exclude irrelevant fields from chart
+    budget = copy.deepcopy(budget)
+    exclude = ["TRANSFER_IN", "INCOME"]
+    for x in exclude:
+        budget.pop(x)
+
+    # Get Transactions
+    categories = budget.keys()
+    transaction_dict = {"category": [], "total": []}
+    for category in categories:
+        selector = [
+            x == category for x in transaction_df["personal_finance_category_primary"]
+        ]
+        total = abs(sum(transaction_df["amount"][selector]))
+        # if total > 0:
+        #     # Only include non-zero and non-negative transactions
+        #     transaction_dict["category"].append(category)
+        #     transaction_dict["total"].append(total)
+        transaction_dict["category"].append(category)
+        transaction_dict["total"].append(total)
+    df = pd.DataFrame(transaction_dict)
+    df["labels"] = [f"${x:.2f}" for x in df["total"]]
+
+    # Format data
+    data = {"categories": [], "budget": [], "transactions": []}
+    for x in categories:
+        b = budget[x]
+        idx = transaction_dict["category"].index(x)
+        t = transaction_dict["total"][idx]
+        if b != 0.0 or t != 0.0:
+            data["categories"].append(x)
+            data["budget"].append(b)
+            data["transactions"].append(t)
+
+    source = ColumnDataSource(data=data)
+    p = figure(
+        x_range=data["categories"],
+        height=height,
+        width=width,
+        title="Budget Transactions",
+        toolbar_location=None,
+        tools="hover",
+        tooltips=[("Budget", "$@budget"), ("Transactions", "$@transactions")],
+    )
+    p.vbar(
+        x=dodge("categories", -0.125, range=p.x_range),
+        top="budget",
+        width=0.2,
+        source=source,
+        color="#2171b5",
+        legend_label="Budget",
+    )
+    p.vbar(
+        x=dodge("categories", 0.125, range=p.x_range),
+        top="transactions",
+        width=0.2,
+        source=source,
+        color="#FFDA00",
+        legend_label="Transactions",
+    )
+    p.x_range.range_padding = 0.1
+    p.xgrid.grid_line_color = None
+    p.legend.orientation = "vertical"
+    p.xaxis.major_label_orientation = np.pi / 4
+    p.y_range.start = 0
+    p.add_layout(p.legend[0], "right")
+
+    # # Alternate chart
+    # x = [
+    #     (category, value)
+    #     for category in data["categories"]
+    #     for value in ["budget", "transactions"]
+    # ]
+    # counts = sum(zip(data["budget"], data["transactions"]), ())  # like an hstack
+    # source = ColumnDataSource(data=dict(x=x, counts=counts))
+    # p = figure(
+    #     x_range=FactorRange(*x),
+    #     height=height,
+    #     width=width,
+    #     title="Budget Transactions",
+    #     toolbar_location=None,
+    #     tools="hover",
+    #     tooltips=f"$@counts",
+    # )
+    # p.vbar(
+    #     x="x",
+    #     top="counts",
+    #     width=0.9,
+    #     source=source,
+    #     color=factor_cmap(
+    #         "x",
+    #         palette=("#2171b5", "#FFDA00"),
+    #         factors=["budget", "transactions"],
+    #         start=1,
+    #     ),
+    # )
+    # p.y_range.start = 0
+    # p.x_range.range_padding = 0.1
+    # p.xaxis.major_label_orientation = 1
+    # p.xgrid.grid_line_color = None
+
     return p
 
 

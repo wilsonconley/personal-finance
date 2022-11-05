@@ -258,6 +258,7 @@
     await update_plot("plot_balances");
     await update_plot("plot_transactions_in");
     await update_plot("plot_transactions_out");
+    await update_plot("plot_budget");
     await update_plot("table_balances", false);
   }
 
@@ -284,6 +285,7 @@
     // is_page_loaded.set(false);
     await update_plot("plot_transactions_in");
     await update_plot("plot_transactions_out");
+    await update_plot("plot_budget");
     // is_page_loaded.set(true);
   }
 
@@ -313,6 +315,7 @@
       }),
     });
     await update_budget();
+    await update_plot("plot_budget");
   }
 
   onMount(async () => {
@@ -343,7 +346,7 @@
       filter_month.set(today.getMonth());
     }
     filter_month_str = months[$filter_month];
-    if ($filter_yearly_transactions < 0) {
+    if ($filter_year < 0) {
       filter_year.set(String(today.getFullYear()));
     }
     if ($filter_yearly_transactions < 0) {
@@ -477,6 +480,10 @@
         {/each}
       </select>
     </div>
+    <div>
+      <h3>Budget</h3>
+      <div id="plot_budget" class="plot_budget" />
+    </div>
     <div class="arrange-horizontally">
       <div>
         <h3>Transactions Out</h3>
@@ -509,6 +516,12 @@
     position: relative;
     background-color: white;
     color: black;
+  }
+  .plot_budget {
+    width: 700px;
+    height: auto;
+    margin: 0 auto;
+    position: relative;
   }
   .transactions_out {
     width: 350px;
