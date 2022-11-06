@@ -217,13 +217,16 @@
         },
       });
       handler.open();
+      await refresh_and_update();
     });
     tokens_checked = true;
   }
 
-  async function refresh_and_update() {
+  async function refresh_and_update(initial = false) {
     // refresh data
-    await fetch("http://127.0.0.1:8000/refresh_data/");
+    if (!initial) {
+      await fetch("http://127.0.0.1:8000/refresh_data/");
+    }
 
     // get balances
     await get_balances();
@@ -368,7 +371,7 @@
     }
 
     // refresh and update data
-    await refresh_and_update();
+    await refresh_and_update(true);
 
     // get budget
     await get_budget();

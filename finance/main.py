@@ -49,6 +49,9 @@ def startup():
     global budget
     budget = Budget()
 
+    # Get data
+    refresh()
+
 
 @APP.get("/refresh_data/")
 def refresh():
