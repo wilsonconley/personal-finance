@@ -7,6 +7,7 @@ from bokeh.embed import json_item
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from plaid.api import plaid_api
+from plaid.exceptions import ApiException
 from plaid.model.country_code import CountryCode
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
 from plaid.model.products import Products
@@ -50,7 +51,10 @@ def startup():
     budget = Budget()
 
     # Get data
-    refresh()
+    try:
+        refresh()
+    except ApiException:
+        pass
 
 
 @APP.get("/refresh_data/")

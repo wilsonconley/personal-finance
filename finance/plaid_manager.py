@@ -28,7 +28,7 @@ class PlaidManager:
     env: str
 
     # Data
-    balances: pd.DataFrame
+    balances: pd.DataFrame = pd.DataFrame({})
     net_worth: float
     transactions: pd.DataFrame
     transactions_all: pd.DataFrame
