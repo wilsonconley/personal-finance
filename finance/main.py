@@ -39,7 +39,8 @@ def startup():
     # 'Production'
     # 'Development'
     # 'Sandbox'
-    env = plaid.Environment.Sandbox
+    # env = plaid.Environment.Sandbox
+    env = plaid.Environment.Development
 
     # Get managers
     global plaid_app
