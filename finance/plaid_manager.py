@@ -149,9 +149,11 @@ class PlaidManager:
                 transactions.extend(response["transactions"])
 
         # Parse data into DataFrame
-        data = {
-            key: [i[key] for i in transactions] for key in transactions[0].to_dict()
-        }
+        data = (
+            {key: [i[key] for i in transactions] for key in transactions[0].to_dict()}
+            if transactions
+            else {"date": [], "personal_finance_category": []}
+        )
         self.transactions_all = pd.DataFrame(data)
 
         # Additional formatting
@@ -191,7 +193,11 @@ class PlaidManager:
         accounts_ = [account.to_dict() for account in accounts]
         for account in accounts_:
             account["balances"] = account["balances"]["available"]
-        data = {key: [i[key] for i in accounts_] for key in accounts_[0]}
+        data = (
+            {key: [i[key] for i in accounts_] for key in accounts_[0]}
+            if accounts_
+            else {"account_id": [], "balances": [], "name": []}
+        )
         self.balances = pd.DataFrame(data)
 
         # Additional formatting

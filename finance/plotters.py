@@ -64,30 +64,33 @@ def bar_graph_budget(transaction_df: pd.DataFrame, budget: dict[str, float]) -> 
     # Get Transactions
     categories = budget.keys()
     transaction_dict = {"category": [], "total": []}
-    for category in categories:
-        selector = [
-            x == category for x in transaction_df["personal_finance_category_primary"]
-        ]
-        total = abs(sum(transaction_df["amount"][selector]))
-        # if total > 0:
-        #     # Only include non-zero and non-negative transactions
-        #     transaction_dict["category"].append(category)
-        #     transaction_dict["total"].append(total)
-        transaction_dict["category"].append(category)
-        transaction_dict["total"].append(total)
+    if len(transaction_df) > 0:
+        for category in categories:
+            selector = [
+                x == category
+                for x in transaction_df["personal_finance_category_primary"]
+            ]
+            total = abs(sum(transaction_df["amount"][selector]))
+            # if total > 0:
+            #     # Only include non-zero and non-negative transactions
+            #     transaction_dict["category"].append(category)
+            #     transaction_dict["total"].append(total)
+            transaction_dict["category"].append(category)
+            transaction_dict["total"].append(total)
     df = pd.DataFrame(transaction_dict)
     df["labels"] = [f"${x:.2f}" for x in df["total"]]
 
     # Format data
     data = {"categories": [], "budget": [], "transactions": []}
-    for x in categories:
-        b = budget[x]
-        idx = transaction_dict["category"].index(x)
-        t = transaction_dict["total"][idx]
-        if b != 0.0 or t != 0.0:
-            data["categories"].append(x)
-            data["budget"].append(b)
-            data["transactions"].append(t)
+    if len(transaction_df) > 0:
+        for x in categories:
+            b = budget[x]
+            idx = transaction_dict["category"].index(x)
+            t = transaction_dict["total"][idx]
+            if b != 0.0 or t != 0.0:
+                data["categories"].append(x)
+                data["budget"].append(b)
+                data["transactions"].append(t)
 
     source = ColumnDataSource(data=data)
     p = figure(
@@ -130,15 +133,17 @@ def pie_chart_transactions_out(
 ) -> Figure:
     # Transactions Out
     transaction_dict = {"category": [], "total": []}
-    for category in categories:
-        selector = [
-            x == category for x in transaction_df["personal_finance_category_primary"]
-        ]
-        total = sum(transaction_df["amount"][selector])
-        if total > 0:
-            # Only include non-zero and non-negative transactions
-            transaction_dict["category"].append(category)
-            transaction_dict["total"].append(total)
+    if len(transaction_df) > 0:
+        for category in categories:
+            selector = [
+                x == category
+                for x in transaction_df["personal_finance_category_primary"]
+            ]
+            total = sum(transaction_df["amount"][selector])
+            if total > 0:
+                # Only include non-zero and non-negative transactions
+                transaction_dict["category"].append(category)
+                transaction_dict["total"].append(total)
     df = pd.DataFrame(transaction_dict)
     df["labels"] = [f"${x:.2f}" for x in df["total"]]
     p = bokeh_pie_chart(
@@ -152,15 +157,17 @@ def pie_chart_transactions_in(
 ) -> Figure:
     # Transactions In
     transaction_dict = {"category": [], "total": []}
-    for category in categories:
-        selector = [
-            x == category for x in transaction_df["personal_finance_category_primary"]
-        ]
-        total = sum(transaction_df["amount"][selector])
-        if total < 0:
-            # Only include negative transactions
-            transaction_dict["category"].append(category)
-            transaction_dict["total"].append(total * -1)
+    if len(transaction_df) > 0:
+        for category in categories:
+            selector = [
+                x == category
+                for x in transaction_df["personal_finance_category_primary"]
+            ]
+            total = sum(transaction_df["amount"][selector])
+            if total < 0:
+                # Only include negative transactions
+                transaction_dict["category"].append(category)
+                transaction_dict["total"].append(total * -1)
     df = pd.DataFrame(transaction_dict)
     df["labels"] = [f"${x:.2f}" for x in df["total"]]
     p = bokeh_pie_chart(
