@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pandas
 import plaid
@@ -11,8 +12,8 @@ secret = {
     plaid.Environment.Sandbox: "XXXXXXXXXXXX",
     plaid.Environment.Development: "",
 }
-if os.path.exists(".access_tokens.csv"):
-    stored_tokens = pandas.read_csv(".access_tokens.csv")
+if os.path.exists(Path(__file__).parent / ".access_tokens.csv"):
+    stored_tokens = pandas.read_csv(Path(__file__).parent / ".access_tokens.csv")
     access_token = {
         plaid.Environment.Sandbox: list(
             stored_tokens[stored_tokens["env"] == "sandbox"]["token"]
