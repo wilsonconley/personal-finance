@@ -167,13 +167,11 @@ class PlaidManager:
         ]
 
         # Apply custom rulesets for categorizing
-        user_categories = []
-        for _, transaction in self.transactions_all.iterrows():
+        user_categories = ["" for _ in range(0, len(self.transactions_all))]
+        for index, transaction in self.transactions_all.iterrows():
             for _, rule in Rules().rules.iterrows():
                 if eval(rule["condition"]):
-                    user_categories.append(rule["categorize"])
-                else:
-                    user_categories.append("")
+                    user_categories[index] = rule["categorize"]
         self.transactions_all.insert(
             len(self.transactions_all.columns), "user_category", user_categories
         )
