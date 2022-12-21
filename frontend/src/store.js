@@ -15,6 +15,7 @@ export const filter_year = writable(-1);
 export const filter_yearly_transactions = writable(-1);
 export const yearly_transactions = writable([]);
 export const budget = writable({});
+export const rules = writable([]);
 
 // /** Data transformation.
 // For our use case, we only care about the drink names, not the other information.

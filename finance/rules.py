@@ -45,13 +45,12 @@ class Rules:
             self.rules = pd.DataFrame({k: [] for k in self.rule_columns})
             self.save_rules()
 
-        # Add test rules
-        # self.add_rule("'HOME TELE' in transaction['name']", "Utilities")
-
     def save_rules(self) -> None:
         self.rules.to_csv(self.filename, index=False)
 
     def add_rule(self, condition: str, categorize: str) -> None:
+        # Example:
+        #   self.add_rule("'HOME TELE' in transaction['name']", "Utilities")
         if (
             (self.rules["condition"] == condition)
             & (self.rules["categorize"] == categorize)
@@ -70,5 +69,7 @@ class Rules:
         )
         self.save_rules()
 
-    def remove_rule(self, condition: str, categorize: str) -> None:
-        pass
+    def remove_rule(self, index: int) -> None:
+        self.rules.drop(index, inplace=True)
+        self.rules.index = range(len(self.rules))
+        self.save_rules()

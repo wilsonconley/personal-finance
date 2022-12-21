@@ -16,6 +16,7 @@ from pydantic import BaseModel
 import finance.plotters as plotters
 from finance.budget import Budget
 from finance.plaid_manager import PlaidManager
+from finance.rules import Rules
 from finance.smartsheet_manager import SmartsheetManager
 
 APP = FastAPI()
@@ -67,6 +68,35 @@ def refresh():
     # # Create bokeh plots
     # plotters.pie_chart_balances(plaid_app.balances)
     # plotters.pie_chart_transactions(plaid_app.transactions, plaid_app.categories)
+    return "success"
+
+
+class RulesRemove(BaseModel):
+    index: int
+
+
+class RulesAdd(BaseModel):
+    condition: str
+    categorize: str
+
+
+@APP.get("/rules/")
+def get_rules():
+    rule_list = []
+    for index, rule in Rules().rules.iterrows():
+        rule_list.append((index, rule["condition"], rule["categorize"]))
+    return json.dumps(rule_list)
+
+
+@APP.post("/rules/remove/")
+def remove_rule(param: RulesRemove):
+    Rules().remove_rule(param.index)
+    return "success"
+
+
+@APP.post("/rules/add/")
+def remove_rule(param: RulesAdd):
+    Rules().add_rule(param.condition, param.categorize)
     return "success"
 
 

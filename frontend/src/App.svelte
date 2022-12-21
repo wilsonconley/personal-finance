@@ -1,7 +1,8 @@
 <script>
   // @ts-nocheck
 
-  import Counter from "./lib/Counter.svelte";
+  import Rule from "./lib/Rule.svelte";
+  import AddRule from "./lib/AddRule.svelte";
   import { onMount } from "svelte";
   import {
     balances,
@@ -14,6 +15,7 @@
     filter_year,
     filter_yearly_transactions,
     budget,
+    rules,
   } from "./store.js";
   import SvelteTable from "svelte-table";
 
@@ -254,6 +256,39 @@
     await update_budget();
   }
 
+  async function get_rules() {
+    // get rules
+    const response = await fetch("http://127.0.0.1:8000/rules/");
+    rules.set(JSON.parse(await response.json()));
+  }
+
+  async function add_rule(condition, categorize) {
+    await fetch("http://127.0.0.1:8000/rules/add/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        condition: condition,
+        categorize: categorize,
+      }),
+    });
+    await get_rules();
+  }
+
+  async function removeRule(index) {
+    await fetch("http://127.0.0.1:8000/rules/remove/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        index: index,
+      }),
+    });
+    await get_rules();
+  }
+
   async function update_budget() {
     total_budget = 0;
     for (const [category, value] of Object.entries($budget)) {
@@ -387,6 +422,9 @@
 
     // make all plots and tables
     await make_plots_and_tables();
+
+    // get transaction rules
+    await get_rules();
 
     is_page_loaded.set(true);
   });
@@ -525,9 +563,43 @@
     </div>
     <SvelteTable columns={transactions_cols} rows={$transactions} />
   </div>
+
+  <div>
+    <h2>Categorization Rules</h2>
+    <div class="rule_padding">
+      <AddRule
+        handleClick={(condition, categorize) => add_rule(condition, categorize)}
+      />
+    </div>
+    <div class="line_padding">
+      <div class="line" />
+    </div>
+    {#each $rules as [index, condition, categorize]}
+      <div class="rule_padding">
+        <Rule handleClick={() => removeRule(index)} {condition} {categorize} />
+      </div>
+    {/each}
+  </div>
 </main>
 
 <style>
+  .rule_padding {
+    height: 60px;
+  }
+
+  .line_padding {
+    height: 7px;
+  }
+
+  .line {
+    margin: auto;
+    width: 700px;
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.87);
+    padding: 0 0 0 0;
+  }
+
   .balances_overview {
     width: 700px;
     height: auto;
