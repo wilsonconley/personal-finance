@@ -1,9 +1,9 @@
 import json
 import os
-from time import sleep
 import typing as t
 from datetime import datetime
 from pathlib import Path
+from time import sleep
 
 import pandas as pd
 import plaid
@@ -16,6 +16,7 @@ from plaid.model.transactions_get_request_options import (
 )
 
 from finance.api_keys import get_plaid
+from finance.rules import Rules
 
 
 class PlaidManager:
@@ -164,6 +165,18 @@ class PlaidManager:
             _get_primary_category(x)
             for x in self.transactions_all["personal_finance_category"]
         ]
+
+        # Apply custom rulesets for categorizing
+        user_categories = []
+        for _, transaction in self.transactions_all.iterrows():
+            for _, rule in Rules().rules.iterrows():
+                if eval(rule["condition"]):
+                    user_categories.append(rule["categorize"])
+                else:
+                    user_categories.append("")
+        self.transactions_all.insert(
+            len(self.transactions_all.columns), "user_category", user_categories
+        )
 
         return self.transactions_all
 

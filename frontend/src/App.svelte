@@ -107,6 +107,15 @@
         return get_unique_values(rows, "personal_finance_category_primary");
       },
     },
+    {
+      key: "user_category",
+      title: "User_Category",
+      value: (v) => v.user_category,
+      sortable: true,
+      filterOptions: (rows) => {
+        return get_unique_values(rows, "user_category");
+      },
+    },
   ];
 
   function get_unique_values(rows, field) {
@@ -387,34 +396,41 @@
   {#if !$is_plaid_link_initialized}
     <script
       src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"
-      on:load={initialize_plaid_link}>
+      on:load={initialize_plaid_link}
+    >
     </script>
   {/if}
   <script
     src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.3.min.js"
     crossorigin="anonymous"
-    on:load={initialize_bokeh}>
+    on:load={initialize_bokeh}
+  >
   </script>
   {#if $is_bokeh_initialized}
     <script
       src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.3.min.js"
-      crossorigin="anonymous">
+      crossorigin="anonymous"
+    >
     </script>
     <script
       src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.3.min.js"
-      crossorigin="anonymous">
+      crossorigin="anonymous"
+    >
     </script>
     <script
       src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.4.3.min.js"
-      crossorigin="anonymous">
+      crossorigin="anonymous"
+    >
     </script>
     <script
       src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.3.min.js"
-      crossorigin="anonymous">
+      crossorigin="anonymous"
+    >
     </script>
     <script
       src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.3.min.js"
-      crossorigin="anonymous">
+      crossorigin="anonymous"
+    >
     </script>
   {/if}
 </svelte:head>
