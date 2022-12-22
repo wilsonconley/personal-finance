@@ -559,15 +559,13 @@
       <h3>Budget</h3>
       <div id="plot_budget" class="plot_budget" />
     </div>
-    <div class="arrange-horizontally">
-      <div>
-        <h3>Transactions Out</h3>
-        <div id="plot_transactions_out" class="transactions_out" />
-      </div>
-      <div>
-        <h3>Transactions In</h3>
-        <div id="plot_transactions_in" class="transactions_in" />
-      </div>
+    <div>
+      <h3>Transactions Out</h3>
+      <div id="plot_transactions_out" class="transactions_out" />
+    </div>
+    <div>
+      <h3>Transactions In</h3>
+      <div id="plot_transactions_in" class="transactions_in" />
     </div>
     <SvelteTable columns={transactions_cols} rows={$transactions} />
   </div>
@@ -629,13 +627,13 @@
     position: relative;
   }
   .transactions_out {
-    width: 350px;
+    width: 700px;
     height: auto;
     margin: 0 auto;
     position: relative;
   }
   .transactions_in {
-    width: 350px;
+    width: 700px;
     height: auto;
     margin: 0 auto;
     position: relative;

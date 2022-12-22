@@ -125,6 +125,10 @@ def bar_graph_budget(transaction_df: pd.DataFrame, budget: dict[str, float]) -> 
     return p
 
 
+TRANSACTION_WIDTH = 700
+TRANSACTION_HEIGHT = 500
+
+
 def pie_chart_transactions_out(
     transaction_df: pd.DataFrame, categories: list[str]
 ) -> Figure:
@@ -141,7 +145,13 @@ def pie_chart_transactions_out(
     df = pd.DataFrame(transaction_dict)
     df["labels"] = [f"${x:.2f}" for x in df["total"]]
     p = bokeh_pie_chart(
-        df, "total", "category", "labels", "transactions_out", height=250, width=350
+        df,
+        "total",
+        "category",
+        "labels",
+        "transactions_out",
+        height=TRANSACTION_HEIGHT,
+        width=TRANSACTION_WIDTH,
     )
     return p
 
@@ -162,7 +172,13 @@ def pie_chart_transactions_in(
     df = pd.DataFrame(transaction_dict)
     df["labels"] = [f"${x:.2f}" for x in df["total"]]
     p = bokeh_pie_chart(
-        df, "total", "category", "labels", "transactions_in", height=250, width=350
+        df,
+        "total",
+        "category",
+        "labels",
+        "transactions_in",
+        height=TRANSACTION_HEIGHT,
+        width=TRANSACTION_WIDTH,
     )
     return p
 
