@@ -250,9 +250,15 @@ class PlaidManager:
 
         # Additional formatting
         self.balances["balances_str"] = [f"${x:.2f}" for x in self.balances["balances"]]
+        # self.balances["legend"] = [
+        #     f"{name} ({id[0:4]})"
+        #     for id, name in zip(self.balances["account_id"], self.balances["name"])
+        # ]
         self.balances["legend"] = [
-            f"{name} ({id[0:4]})"
-            for id, name in zip(self.balances["account_id"], self.balances["name"])
+            f"{name} - {official_name}"
+            for official_name, name in zip(
+                self.balances["official_name"], self.balances["name"]
+            )
         ]
 
         # Calculate net worth

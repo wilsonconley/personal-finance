@@ -14,8 +14,8 @@ from bokeh.transform import cumsum, factor_cmap, dodge
 
 def table_balances(balances_df: pd.DataFrame) -> Figure:
     columns = [
-        TableColumn(field="legend", title="Name"),
-        TableColumn(field="balances", title="Balance"),
+        TableColumn(field="legend", title="Name", width=600),
+        TableColumn(field="balances", title="Balance", width=200),
     ]
     p = bokeh_data_table(
         balances_df,
