@@ -66,10 +66,7 @@ def bar_graph_budget(transaction_df: pd.DataFrame, budget: dict[str, float]) -> 
     transaction_dict = {"category": [], "total": []}
     if len(transaction_df) > 0:
         for category in categories:
-            selector = [
-                x == category
-                for x in transaction_df["personal_finance_category_primary"]
-            ]
+            selector = [x == category for x in transaction_df["plot_category"]]
             total = abs(sum(transaction_df["amount"][selector]))
             # if total > 0:
             #     # Only include non-zero and non-negative transactions
