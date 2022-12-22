@@ -48,10 +48,6 @@ def startup():
     plaid_app = PlaidManager(env)
     # smart = SmartsheetManager()
 
-    # Load budget
-    global budget
-    budget = Budget()
-
     # Get data
     try:
         refresh()
@@ -64,6 +60,10 @@ def refresh():
     # Update balances and transactions
     plaid_app.get_balances()
     plaid_app.get_transactions()
+
+    # Load budget
+    global budget
+    budget = Budget(plaid_app.categories)
 
     # # Create bokeh plots
     # plotters.pie_chart_balances(plaid_app.balances)
@@ -91,12 +91,20 @@ def get_rules():
 @APP.post("/rules/remove/")
 def remove_rule(param: RulesRemove):
     Rules().remove_rule(param.index)
+    plaid_app.apply_user_categories()
+
+    global budget
+    budget = Budget(plaid_app.categories)
     return "success"
 
 
 @APP.post("/rules/add/")
 def remove_rule(param: RulesAdd):
     Rules().add_rule(param.condition, param.categorize)
+    plaid_app.apply_user_categories()
+
+    global budget
+    budget = Budget(plaid_app.categories)
     return "success"
 
 

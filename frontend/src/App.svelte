@@ -273,7 +273,11 @@
         categorize: categorize,
       }),
     });
+    is_page_loaded.set(false);
     await get_rules();
+    await get_budget();
+    await update_monthly_transactions();
+    is_page_loaded.set(true);
   }
 
   async function removeRule(index) {
@@ -286,7 +290,11 @@
         index: index,
       }),
     });
+    is_page_loaded.set(false);
     await get_rules();
+    await get_budget();
+    await update_monthly_transactions();
+    is_page_loaded.set(true);
   }
 
   async function update_budget() {
@@ -588,7 +596,7 @@
   }
 
   .line_padding {
-    height: 7px;
+    height: 6px;
   }
 
   .line {

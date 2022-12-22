@@ -36,7 +36,7 @@ class PlaidManager:
     yearly_transactions: pd.DataFrame
 
     # Helpers
-    categories: list[str] = [
+    base_categories: list[str] = [
         "INCOME",
         "TRANSFER_IN",
         "TRANSFER_OUT",
@@ -54,6 +54,7 @@ class PlaidManager:
         "TRAVEL",
         "RENT_AND_UTILITIES",
     ]
+    categories: list[str]
 
     def __init__(self, env: str) -> None:
         client_id, secret, access_tokens = get_plaid(env)
@@ -73,6 +74,10 @@ class PlaidManager:
         self.api_client = api_client
         self.client = client
         self.env = env
+
+        self.categories = self.base_categories
+
+        self.transactions = pd.DataFrame()
 
     def check_existing_tokens(self) -> list[str]:
         bad_tokens = []
@@ -166,17 +171,47 @@ class PlaidManager:
             for x in self.transactions_all["personal_finance_category"]
         ]
 
-        # Apply custom rulesets for categorizing
-        user_categories = ["" for _ in range(0, len(self.transactions_all))]
-        for index, transaction in self.transactions_all.iterrows():
-            for _, rule in Rules().rules.iterrows():
-                if eval(rule["condition"]):
-                    user_categories[index] = rule["categorize"]
-        self.transactions_all.insert(
-            len(self.transactions_all.columns), "user_category", user_categories
-        )
+        self.apply_user_categories()
 
         return self.transactions_all
+
+    def apply_user_categories(self) -> None:
+        for df in (self.transactions, self.transactions_all):
+            if len(df) == 0:
+                continue
+
+            # Apply custom rulesets for categorizing
+            user_categories = ["" for _ in range(0, len(df))]
+            for index, transaction in df.iterrows():
+                for _, rule in Rules().rules.iterrows():
+                    if eval(rule["condition"]):
+                        user_categories[index] = rule["categorize"]
+            if "user_category" in df.columns:
+                df.loc[
+                    [True for _ in range(len(df))], "user_category"
+                ] = user_categories
+            else:
+                df.insert(len(df.columns), "user_category", user_categories)
+
+            # Choose category for plotting
+            plot_categories = []
+            for _, transaction in df.iterrows():
+                to_append = (
+                    transaction["user_category"]
+                    if transaction["user_category"]
+                    else transaction["personal_finance_category_primary"]
+                )
+                plot_categories.append(to_append)
+            if "plot_category" in df.columns:
+                df.loc[
+                    [True for _ in range(len(df))], "plot_category"
+                ] = plot_categories
+            else:
+                df.insert(len(df.columns), "plot_category", plot_categories)
+
+            self.categories = self.base_categories + list(
+                set([x for x in plot_categories if x not in self.base_categories])
+            )
 
     def filter_transactions_by_month(self, month: str, year: str) -> None:
         selector = [
@@ -184,10 +219,12 @@ class PlaidManager:
             for x in self.transactions_all["date"]
         ]
         self.transactions = self.transactions_all[selector]
+        self.transactions.index = range(len(self.transactions))
 
     def filter_transactions_by_year(self, year: str) -> None:
         selector = [str(x)[0:4] == year for x in self.transactions_all["date"]]
         self.yearly_transactions = self.transactions_all[selector]
+        self.yearly_transactions.index = range(len(self.yearly_transactions))
 
     def get_balances(self, access_tokens: t.Optional[list[str]] = None) -> pd.DataFrame:
         if not access_tokens:

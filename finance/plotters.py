@@ -135,10 +135,7 @@ def pie_chart_transactions_out(
     transaction_dict = {"category": [], "total": []}
     if len(transaction_df) > 0:
         for category in categories:
-            selector = [
-                x == category
-                for x in transaction_df["personal_finance_category_primary"]
-            ]
+            selector = [x == category for x in transaction_df["plot_category"]]
             total = sum(transaction_df["amount"][selector])
             if total > 0:
                 # Only include non-zero and non-negative transactions
@@ -159,10 +156,7 @@ def pie_chart_transactions_in(
     transaction_dict = {"category": [], "total": []}
     if len(transaction_df) > 0:
         for category in categories:
-            selector = [
-                x == category
-                for x in transaction_df["personal_finance_category_primary"]
-            ]
+            selector = [x == category for x in transaction_df["plot_category"]]
             total = sum(transaction_df["amount"][selector])
             if total < 0:
                 # Only include negative transactions
