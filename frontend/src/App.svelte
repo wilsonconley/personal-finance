@@ -606,7 +606,7 @@
 
   .line {
     margin: auto;
-    width: 900px;
+    width: 1000px;
     height: 2px;
     border-radius: 2px;
     background: rgba(255, 255, 255, 0.87);

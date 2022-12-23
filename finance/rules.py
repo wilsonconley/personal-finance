@@ -10,34 +10,6 @@ class Rules:
     filename = Path(__file__).parent / ".rules.csv"
     rules: pd.DataFrame
 
-    transaction_columns: list[str] = [
-        "pending_transaction_id",
-        "category_id",
-        "category",
-        "location",
-        "payment_meta",
-        "account_owner",
-        "name",
-        "account_id",
-        "amount",
-        "iso_currency_code",
-        "unofficial_currency_code",
-        "date",
-        "pending",
-        "transaction_id",
-        "payment_channel",
-        "authorized_date",
-        "authorized_datetime",
-        "datetime",
-        "transaction_code",
-        "check_number",
-        "merchant_name",
-        "personal_finance_category",
-        "transaction_type",
-        "datestr",
-        "personal_finance_category_primary",
-    ]
-
     def __init__(self) -> None:
         if os.path.exists(self.filename):
             self.rules = pd.read_csv(self.filename)

@@ -20,7 +20,7 @@
 <style>
   .card {
     margin: auto;
-    width: 900px;
+    width: 1000px;
     height: 56px;
     border-radius: 5px;
     background: #bebebe33;
@@ -40,6 +40,6 @@
   }
 
   .left-side {
-    width: 775px;
+    width: 875px;
   }
 </style>
