@@ -262,14 +262,15 @@
     rules.set(JSON.parse(await response.json()));
   }
 
-  async function add_rule(condition, categorize) {
+  async function add_rule(search_str, transaction_field, categorize) {
     await fetch("http://127.0.0.1:8000/rules/add/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        condition: condition,
+        search_str: search_str,
+        transaction_field: transaction_field,
         categorize: categorize,
       }),
     });
@@ -574,15 +575,21 @@
     <h2>Categorization Rules</h2>
     <div class="rule_padding">
       <AddRule
-        handleClick={(condition, categorize) => add_rule(condition, categorize)}
+        handleClick={(search_str, transaction_field, categorize) =>
+          add_rule(search_str, transaction_field, categorize)}
       />
     </div>
     <div class="line_padding">
       <div class="line" />
     </div>
-    {#each $rules as [index, condition, categorize]}
+    {#each $rules as [index, search_str, transaction_field, categorize]}
       <div class="rule_padding">
-        <Rule handleClick={() => removeRule(index)} {condition} {categorize} />
+        <Rule
+          handleClick={() => removeRule(index)}
+          {search_str}
+          {transaction_field}
+          {categorize}
+        />
       </div>
     {/each}
   </div>
@@ -599,7 +606,7 @@
 
   .line {
     margin: auto;
-    width: 700px;
+    width: 900px;
     height: 2px;
     border-radius: 2px;
     background: rgba(255, 255, 255, 0.87);

@@ -184,7 +184,8 @@ class PlaidManager:
             user_categories = ["" for _ in range(0, len(df))]
             for index, transaction in df.iterrows():
                 for _, rule in Rules().rules.iterrows():
-                    if eval(rule["condition"]):
+                    condition = f"""'{rule["search_str"]}' in transaction['{rule["transaction_field"]}']"""
+                    if eval(condition):
                         user_categories[index] = rule["categorize"]
             if "user_category" in df.columns:
                 df.loc[

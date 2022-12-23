@@ -76,7 +76,8 @@ class RulesRemove(BaseModel):
 
 
 class RulesAdd(BaseModel):
-    condition: str
+    search_str: str
+    transaction_field: str
     categorize: str
 
 
@@ -84,7 +85,9 @@ class RulesAdd(BaseModel):
 def get_rules():
     rule_list = []
     for index, rule in Rules().rules.iterrows():
-        rule_list.append((index, rule["condition"], rule["categorize"]))
+        rule_list.append(
+            (index, rule["search_str"], rule["transaction_field"], rule["categorize"])
+        )
     return json.dumps(rule_list)
 
 
@@ -100,7 +103,7 @@ def remove_rule(param: RulesRemove):
 
 @APP.post("/rules/add/")
 def remove_rule(param: RulesAdd):
-    Rules().add_rule(param.condition, param.categorize)
+    Rules().add_rule(param.search_str, param.transaction_field, param.categorize)
     plaid_app.apply_user_categories()
 
     global budget

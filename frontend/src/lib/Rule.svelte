@@ -1,13 +1,15 @@
 <script>
   // component props
-  export let handleClick, condition, categorize;
+  export let handleClick;
+  export let search_str, transaction_field, categorize;
 </script>
 
 <main>
   <div class="card">
     <div class="left-side">
       <p>
-        if <span class="condition">{condition}</span>, categorize as
+        if <span class="condition">{search_str}</span> in
+        <span class="condition">{transaction_field}</span>, categorize as
         <span class="condition">{categorize}</span>
       </p>
     </div>
@@ -18,7 +20,7 @@
 <style>
   .card {
     margin: auto;
-    width: 700px;
+    width: 900px;
     height: 56px;
     border-radius: 5px;
     background: #bebebe33;
@@ -38,6 +40,6 @@
   }
 
   .left-side {
-    width: 575px;
+    width: 775px;
   }
 </style>

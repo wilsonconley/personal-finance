@@ -6,7 +6,7 @@ import pandas as pd
 
 class Rules:
 
-    rule_columns: list[str] = ["condition", "categorize"]
+    rule_columns: list[str] = ["search_str", "transaction_field", "categorize"]
     filename = Path(__file__).parent / ".rules.csv"
     rules: pd.DataFrame
 
@@ -48,11 +48,14 @@ class Rules:
     def save_rules(self) -> None:
         self.rules.to_csv(self.filename, index=False)
 
-    def add_rule(self, condition: str, categorize: str) -> None:
+    def add_rule(
+        self, search_str: str, transaction_field: str, categorize: str
+    ) -> None:
         # Example:
         #   self.add_rule("'HOME TELE' in transaction['name']", "Utilities")
         if (
-            (self.rules["condition"] == condition)
+            (self.rules["search_str"] == search_str)
+            & (self.rules["transaction_field"] == transaction_field)
             & (self.rules["categorize"] == categorize)
         ).any():
             # Rule already in ruleset
@@ -62,7 +65,12 @@ class Rules:
             [
                 self.rules,
                 pd.DataFrame(
-                    {"condition": condition, "categorize": categorize}, index=[0]
+                    {
+                        "search_str": search_str,
+                        "transaction_field": transaction_field,
+                        "categorize": categorize,
+                    },
+                    index=[0],
                 ),
             ],
             ignore_index=True,

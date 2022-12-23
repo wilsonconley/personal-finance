@@ -2,15 +2,22 @@
   // component props
   export let handleClick;
 
-  let condition = "";
+  let search_str = "";
+  let transaction_field = "";
   let categorize = "";
 </script>
 
 <main>
   <div class="card">
     <div class="left-side">
-      <label for="rule_condition">if </label>
-      <input bind:value={condition} id="rule_condition" name="rule_condition" />
+      <label for="search_str">if </label>
+      <input bind:value={search_str} id="search_str" name="search_str" />
+      <label for="transaction_field"> in </label>
+      <input
+        bind:value={transaction_field}
+        id="transaction_field"
+        name="transaction_field"
+      />
       <label for="rule_categorize">, categorize as </label>
       <input
         bind:value={categorize}
@@ -18,14 +25,17 @@
         name="rule_categorize"
       />
     </div>
-    <button on:click={() => handleClick(condition, categorize)}>Add</button>
+    <button
+      on:click={() => handleClick(search_str, transaction_field, categorize)}
+      >Add</button
+    >
   </div>
 </main>
 
 <style>
   .card {
     margin: auto;
-    width: 700px;
+    width: 900px;
     height: 56px;
     border-radius: 5px;
     background: #bebebe33;
@@ -39,6 +49,6 @@
   }
 
   .left-side {
-    width: 575px;
+    width: 775px;
   }
 </style>
