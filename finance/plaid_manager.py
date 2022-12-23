@@ -213,6 +213,15 @@ class PlaidManager:
                 set([x for x in plot_categories if x not in self.base_categories])
             )
 
+            # Exclude "exclude" or "disable" categories from plot
+            to_remove = [
+                x
+                for x in self.categories
+                if x.lower() == "exclude" or x.lower() == "disable"
+            ]
+            for x in to_remove:
+                self.categories.remove(x)
+
     def filter_transactions_by_month(self, month: str, year: str) -> None:
         selector = [
             str(x)[0:4] == year and int(str(x)[5:7]) == int(month)
